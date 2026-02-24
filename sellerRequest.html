@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Seller Request</title>
+  <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background-color: #f4f6f800;
+        }
+
+        header {
+            background-color: #3b274f;
+            color: white;
+            padding: 15px 30px;
+        }
+
+        nav {
+            background-color: #54397f;
+            padding: 10px 30px;
+        }
+
+            nav a {
+                color: white;
+                text-decoration: none;
+                margin-right: 20px;
+                font-weight: bold;
+
+            }
+
+                nav a:hover {
+                    text-decoration: underline;
+                }
+
+        button{
+          padding: 8px 12px;
+          
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #7452ff;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        footer {
+            background-color: #3b274f;
+            color: white;
+            text-align: center;
+            padding: 15px;
+            margin-top: 40px;
+        }
+    </style>
+</head>
+<header>
+  <h2>Seller Requests</h2>
+</header>
+<nav>
+           
+    <a href="admin.html">Home</a>
+    <a href="admin.html">Product Request</a>
+    <a href="sellerRequest.html">Seller Account Request</a>
+    <a href="admin.html">User Activity</a>
+           
+</nav>
+<body>
+  
+  <table>
+    <tr>
+      <th>First Name</th>
+      <th>Last Name</th>
+      <th>Email</th>
+      <th>Response</th>
+
+
+    </tr>
+    <tr><td>Alice</td><td>Foster</td><td>alicef@gmail.com</td><td><button onclick="handleButtonClick(1)">Approve</button><button onclick="handleButtonClick(2)">Reject</button></td></tr>
+    <tr><td>Bob</td><td>Long</td><td>BL98@gmail.com</td><td><button onclick="handleButtonClick(1)">Approve</button><button onclick="handleButtonClick(2)">Reject</button></td></tr>
+    <tr><td>Charlie</td><td>Star</td><td>CharS@gmail.com</td><td><button onclick="handleButtonClick(1)">Approve</button><button onclick="handleButtonClick(2)">Reject</button></td></tr>
+    <tr><td>Jane</td><td>Doe</td><td>JD@gmail.com</td><td><button onclick="handleButtonClick(1)">Approve</button><button onclick="handleButtonClick(2)">Reject</button></td></tr>
+    <tr><td>Robert</td><td>Smith</td><td>SmithR@gmail.com</td><td><button onclick="handleButtonClick(1)">Approve</button><button onclick="handleButtonClick(2)">Reject</button></td></tr>
+    <tr><td>DJ</td><td>Fuller</td><td>DJF@gmail.com</td><td><button onclick="handleButtonClick(1)">Approve</button><button onclick="handleButtonClick(2)">Reject</button></td></tr>
+    <tr><td>Charlie</td><td>Chocolate</td><td>CC1964@gmail.com</td><td><button onclick="handleButtonClick(1)">Approve</button><button onclick="handleButtonClick(2)">Reject</button></td></tr>
+    <tr><td>Wes</td><td>Floyd</td><td>WesFlo@gmail.com</td><td><button onclick="handleButtonClick(1)">Approve</button><button onclick="handleButtonClick(2)">Reject</button></td></tr>
+  </table>
+</body>
+<footer>
+  
+</footer>
+</html>
