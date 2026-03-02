@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Seller Home</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background-color: #f4f6f8;
+        }
+
+        header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 15px 30px;
+        }
+
+        nav {
+            background-color: #34495e;
+            padding: 10px 30px;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            margin-right: 20px;
+            font-weight: bold;
+        }
+
+        nav a:hover {
+            text-decoration: underline;
+        }
+
+        .container {
+            padding: 30px;
+        }
+
+        .dashboard {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            width: 240px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .card h3 {
+            margin-top: 0;
+        }
+
+        .button-link {
+            display: inline-block;
+            background-color: #3498db;
+            color: white;
+            text-decoration: none;
+            padding: 10px 12px;
+            border-radius: 6px;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        .button-link:hover {
+            opacity: 0.9;
+        }
+
+        footer {
+            background-color: #2c3e50;
+            color: white;
+            text-align: center;
+            padding: 15px;
+            margin-top: 40px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>Welcome, Seller!</h1>
+    </header>
+
+    <nav>
+        <a href="seller_home.html">Home</a>
+        <a href="my_listings.html">My Listings</a>
+        <a href="add_product.html">Add Product</a>
+        <a href="sale_history.html">Sale History</a>
+        <a href="#">Logout</a>
+    </nav>
+
+    <div class="container">
+
+        <h2>Seller Dashboard</h2>
+
+        <div class="dashboard">
+
+            <!-- Product List -->
+            <div class="card">
+                <h3>My Product List</h3>
+                <p>View, edit, or remove products you’re selling.</p>
+                <a class="button-link" href="my_listings.html">View Products</a>
+            </div>
+
+            <!-- Create Product -->
+            <div class="card">
+                <h3>Create New Product</h3>
+                <p>Add a new item and publish it to the marketplace.</p>
+                <a class="button-link" href="add_product.html">Add Product</a>
+            </div>
+
+            <!-- Sale History -->
+            <div class="card">
+                <h3>Sale History</h3>
+                <p>View completed and past sales transactions.</p>
+                <a class="button-link" href="sale_history.html">View Sale History</a>
+            </div>
+
+        </div>
+
+    </div>
+
+    <footer>
+        © 2026 ThreadSwitch
+    </footer>
+
+</body>
+</html>
