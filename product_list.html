@@ -76,7 +76,21 @@
             border-radius: 4px;
             margin-right: 5px;
         }
+        
+        .add-btn {
+        display: inline-block;
+        padding: 10px 15px;
+        background-color: #27ae60;
+        color: white;
+        text-decoration: none;
+        border-radius: 4px;
+        font-weight: bold;
+        }
 
+        .add-btn:hover {
+            background-color: #219150;
+        }
+        
         .edit-btn {
             background-color: #f39c12;
             color: white;
@@ -105,16 +119,16 @@
 
     <nav>
         <a href="seller_home.html">Home</a>
-        <a href="my_listings.html">My Listings</a>
-        <a href="add_product.html">Add Product</a>
-        <a href="seller_orders.html">Orders</a>
-        <a href="#">Logout</a>
+        <a href="product_list.html">My Listings</a>
+        <a href="product_creation.html">Add Product</a>
+        <a href="seller_sale_history.html">Orders</a>
+        <a href="Index.html">Logout</a>
     </nav>
 
     <div class="container">
 
         <div class="top-actions">
-            <button>Add New Product</button>
+            <a href="product_creation.html" class="add-btn">Add New Product</a>
         </div>
 
         <table>
