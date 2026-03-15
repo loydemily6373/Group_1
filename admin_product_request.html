@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Product Requests</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            margin: 0;
+            background: #f4f6f8;
+        }
+
+        header {
+            background: #2c3e50;
+            color: white;
+            padding: 15px 30px;
+        }
+
+        nav {
+            background: #34495e;
+            padding: 10px 30px;
+        }
+
+            nav a {
+                color: white;
+                text-decoration: none;
+                margin-right: 20px;
+                font-weight: bold;
+            }
+
+                nav a:hover {
+                    text-decoration: underline;
+                }
+
+        .container {
+            padding: 30px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: center;
+        }
+
+        th {
+            background: #3498db;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background: #f2f2f2;
+        }
+
+        .approve-btn {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            margin-right: 5px;
+        }
+
+        .reject-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 6px 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <header><h1>Product Approval Requests</h1></header>
+
+    <nav>
+        <a href="admin.html">Home</a>
+        <a href="admin_product_request.html">Product Requests</a>
+        <a href="admin_seller_request.html">Seller Account Requests</a>
+        <a href="admin_user_activity.html">User Activity</a>
+        <a href="Index.html">Logout</a>
+    </nav>
+
+    <div class="container">
+        <table>
+            <tr>
+                <th>Product Name</th>
+                <th>Seller</th>
+                <th>Category</th>
+                <th>Action</th>
+            </tr>
+            <tr>
+                <td>Cargo Pants</td>
+                <td>Mavin's Threads</td>
+                <td>Pants</td>
+                <td>
+                    <button class="approve-btn">Approve</button>
+                    <button class="reject-btn">Reject</button>
+                </td>
+            </tr>
+        </table>
+    </div>
+</body>
+</html>
