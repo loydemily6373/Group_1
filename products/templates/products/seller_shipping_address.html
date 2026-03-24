@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Seller Shipping Address</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background-color: #f4f6f8;
+        }
+
+        header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 15px 30px;
+        }
+
+        nav {
+            background-color: #34495e;
+            padding: 10px 30px;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            margin-right: 20px;
+            font-weight: bold;
+        }
+
+        .container {
+            padding: 30px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: white;
+            padding: 22px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .field {
+            margin-bottom: 14px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 6px;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccd5dd;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+
+        .btn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .errorlist {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Seller Shipping Address</h1>
+    </header>
+
+    <nav>
+        <a href="{% url 'seller_home' %}">Home</a>
+        <a href="{% url 'product_list' %}">My Listings</a>
+        <a href="{% url 'seller_order_history' %}">Order History</a>
+        <a href="{% url 'seller_shipping_address' %}">Shipping Address</a>
+    </nav>
+
+    <div class="container">
+        <div class="card">
+            <h2>{% if address %}Update{% else %}Add{% endif %} Default Shipping Address</h2>
+            <p>This address is used as the ship-from origin for your order items during buyer checkout.</p>
+            <form method="post">
+                {% csrf_token %}
+                {% for field in form %}
+                    <div class="field">
+                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {{ field.errors }}
+                    </div>
+                {% endfor %}
+
+                <button type="submit" class="btn">Save Shipping Address</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

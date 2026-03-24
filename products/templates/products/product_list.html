@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Product Listings</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background-color: #f4f6f8;
+        }
+
+        header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 15px 30px;
+        }
+
+        nav {
+            background-color: #34495e;
+            padding: 10px 30px;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            margin-right: 20px;
+            font-weight: bold;
+        }
+
+        nav a:hover {
+            text-decoration: underline;
+        }
+
+        .container {
+            padding: 30px;
+        }
+
+        .top-actions {
+            margin-bottom: 20px;
+        }
+
+        .add-btn {
+            display: inline-block;
+            padding: 10px 15px;
+            background-color: #27ae60;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .add-btn:hover {
+            background-color: #219150;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #3498db;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        .edit-btn,
+        .delete-btn {
+            display: inline-block;
+            padding: 6px 10px;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+            margin-right: 5px;
+            text-decoration: none;
+            color: white;
+            font-size: 14px;
+        }
+
+        .edit-btn {
+            background-color: #f39c12;
+        }
+
+        .delete-btn {
+            background-color: #e74c3c;
+        }
+
+        footer {
+            background-color: #2c3e50;
+            color: white;
+            text-align: center;
+            padding: 15px;
+            margin-top: 40px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>My Product Listings</h1>
+    </header>
+
+    <nav>
+        <a href="{% url 'seller_home' %}">Home</a>
+        <a href="{% url 'product_list' %}">My Listings</a>
+        <a href="{% url 'product_creation' %}">Add Product</a>
+        
+    </nav>
+
+    <div class="container">
+
+        <div class="top-actions">
+            <a href="{% url 'product_creation' %}" class="add-btn">Add New Product</a>
+        </div>
+
+        <table>
+            <tr>
+                <th>Product ID</th>
+                <th>Product Name</th>
+                <th>Price</th>
+                <th>Stock</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+
+            {% for product in products %}
+            <tr>
+                <td>#P{{ product.id }}</td>
+                <td>{{ product.product_name }}</td>
+                <td>${{ product.price }}</td>
+                <td>{{ product.stock }}</td>
+                <td>{{ product.status }}</td>
+                <td>
+                    <a href="{% url 'product_edit' product.id %}" class="edit-btn">Edit</a>
+                    <a href="{% url 'product_delete' product.id %}" class="delete-btn">Delete</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6">No products yet.</td>
+            </tr>
+            {% endfor %}
+        </table>
+
+    </div>
+
+    <footer>
+        © 2026 ThreadSwitch
+    </footer>
+
+</body>
+</html>

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sales History</title>
+    <style>
+        body {
+            font-family: Arial;
+            margin: 0;
+            background: #f4f6f8;
+        }
+
+        header {
+            background: #2c3e50;
+            color: white;
+            padding: 15px 30px;
+        }
+
+        nav {
+            background: #34495e;
+            padding: 10px 30px;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            margin-right: 20px;
+            font-weight: bold;
+        }
+
+        nav a:hover {
+            text-decoration: underline;
+        }
+
+        .container {
+            padding: 30px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: center;
+        }
+
+        th {
+            background: #3498db;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background: #f2f2f2;
+        }
+
+        footer {
+            background-color: #2c3e50;
+            color: white;
+            text-align: center;
+            padding: 15px;
+            margin-top: 40px;
+        }
+    </style>
+</head>
+
+<body>
+    <header><h1>Sales History</h1></header>
+
+    <nav>
+        <a href="{% url 'seller_home' %}">Home</a>
+        <a href="{% url 'product_list' %}">My Listings</a>
+        <a href="{% url 'product_creation' %}">Add Product</a>
+        <a href="{% url 'seller_sale_history' %}">Sale History</a>
+    </nav>
+
+    <div class="container">
+        <table>
+            <tr>
+                <th>Order ID</th>
+                <th>Product</th>
+                <th>Buyer</th>
+                <th>Date</th>
+                <th>Total</th>
+            </tr>
+
+            {% for sale in sales %}
+            <tr>
+                <td>{{ sale.order_id }}</td>
+                <td>{{ sale.product.product_name }}</td>
+                <td>{{ sale.buyer }}</td>
+                <td>{{ sale.date }}</td>
+                <td>${{ sale.total }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5">No sales yet.</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <footer>
+        © 2026 ThreadSwitch
+    </footer>
+</body>
+</html>
