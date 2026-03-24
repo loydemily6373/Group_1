@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Sign Up</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            margin: 0;
+            background: #f4f6f8;
+        }
+
+        header {
+            background: #2c3e50;
+            color: white;
+            padding: 15px 30px;
+        }
+
+        .container {
+            padding: 40px;
+            max-width: 500px;
+            margin: auto;
+            background: white;
+            margin-top: 40px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        input, select {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 15px;
+        }
+
+        .account-note {
+            font-size: 14px;
+            color: #555;
+            margin-top: -5px;
+            margin-bottom: 15px;
+        }
+
+        .seller-address-section {
+            border: 1px solid #d7dde4;
+            background: #f8fafc;
+            padding: 16px;
+            margin-bottom: 15px;
+        }
+
+        .seller-address-section.hidden {
+            display: none;
+        }
+
+        .seller-address-section h3 {
+            margin-top: 0;
+            margin-bottom: 12px;
+        }
+
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px;
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <header><h1>Create Account</h1></header>
+
+    <div class="container">
+        
+        <form id="signupForm">
+            <label>First Name</label>
+            <input type="text" id="firstName" required>
+
+            <label>Last Name</label>
+            <input type="text" id="lastName" required>
+
+            <label>Email</label>
+            <input type="email" id="email" required>
+
+            <label>Username</label>
+            <input type="text" id="username" required>
+
+            <label>Password</label>
+            <input type="password" id="password" required>
+
+            <label>Account Type</label>
+            <select id="role">
+                <option value="buyer">Buyer</option>
+                <option value="seller">Seller</option>
+            </select>
+            <p id="role-note" class="account-note">Buyer accounts can log in immediately after signup.</p>
+
+            <div id="seller-address-section" class="seller-address-section hidden">
+                <h3>Seller Shipping Address</h3>
+                <p class="account-note">This ship-from address is required for seller checkout and will be saved to your account.</p>
+
+                <label>Address Label</label>
+                <input type="text" id="sellerAddressLabel">
+
+                <label>Recipient Name</label>
+                <input type="text" id="sellerRecipientName">
+
+                <label>Address Line 1</label>
+                <input type="text" id="sellerAddressLine1">
+
+                <label>Address Line 2</label>
+                <input type="text" id="sellerAddressLine2">
+
+                <label>City</label>
+                <input type="text" id="sellerCity">
+
+                <label>State / County</label>
+                <input type="text" id="sellerState">
+
+                <label>Postal Code</label>
+                <input type="text" id="sellerPostalCode">
+
+                <label>Country</label>
+                <input type="text" id="sellerCountry">
+
+                <label>Phone Number</label>
+                <input type="text" id="sellerPhoneNumber">
+            </div>
+
+            <button type="submit">Create Account</button>
+        </form>
+        <p><a href="{% url 'login' %}">Back to login</a></p>
+    </div>
+
+<script>
+const roleSelect = document.getElementById("role");
+const roleNote = document.getElementById("role-note");
+const sellerAddressSection = document.getElementById("seller-address-section");
+const sellerAddressFields = [
+    document.getElementById("sellerAddressLabel"),
+    document.getElementById("sellerRecipientName"),
+    document.getElementById("sellerAddressLine1"),
+    document.getElementById("sellerCity"),
+    document.getElementById("sellerState"),
+    document.getElementById("sellerPostalCode"),
+    document.getElementById("sellerCountry")
+];
+
+
+function updateRoleNote() {
+    if (roleSelect.value === "seller") {
+        roleNote.textContent = "Seller accounts are created immediately, but an admin must approve them before you can log in.";
+        sellerAddressSection.classList.remove("hidden");
+        sellerAddressFields.forEach((field) => {
+            field.required = true;
+        });
+    } else {
+        roleNote.textContent = "Buyer accounts can log in immediately after signup.";
+        sellerAddressSection.classList.add("hidden");
+        sellerAddressFields.forEach((field) => {
+            field.required = false;
+        });
+    }
+}
+
+updateRoleNote();
+roleSelect.addEventListener("change", updateRoleNote);
+
+
+document.getElementById("signupForm").addEventListener("submit", async function(e) {
+    e.preventDefault();
+
+    const firstName = document.getElementById("firstName").value;
+    const lastName = document.getElementById("lastName").value;
+    const email = document.getElementById("email").value;
+    const username = document.getElementById("username").value;
+    const password = document.getElementById("password").value;
+    const role = document.getElementById("role").value;
+    const payload = {
+        first_name: firstName,
+        last_name: lastName,
+        email: email,
+        username: username,
+        password: password,
+        role: role
+    };
+
+    if (role === "seller") {
+        payload.seller_address_label = document.getElementById("sellerAddressLabel").value;
+        payload.seller_recipient_name = document.getElementById("sellerRecipientName").value;
+        payload.seller_address_line_1 = document.getElementById("sellerAddressLine1").value;
+        payload.seller_address_line_2 = document.getElementById("sellerAddressLine2").value;
+        payload.seller_city = document.getElementById("sellerCity").value;
+        payload.seller_state = document.getElementById("sellerState").value;
+        payload.seller_postal_code = document.getElementById("sellerPostalCode").value;
+        payload.seller_country = document.getElementById("sellerCountry").value;
+        payload.seller_phone_number = document.getElementById("sellerPhoneNumber").value;
+    }
+
+    try {
+        const response = await fetch("{% url 'account_register_api' %}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+        console.log(data);
+
+        if (response.ok) {
+            if (role === "seller") {
+                alert("Seller account created successfully. An admin must approve your account before you can log in.");
+            } else {
+                alert("Account created successfully!");
+            }
+            
+            window.location.href = "{% url 'login' %}";
+        } else {
+            alert("Error: " + JSON.stringify(data));
+        }
+
+    } catch (error) {
+        console.error(error);
+        alert("Something went wrong");
+    }
+});
+</script>
+
+</body>
+</html>
