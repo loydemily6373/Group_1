@@ -1,4 +1,8 @@
+import tempfile
+
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
+from django.test import override_settings
 from django.urls import reverse
 from django.utils import timezone
 
@@ -6,7 +10,19 @@ from accounts.models import User
 from admin.models import ProductApprovalRequest
 from buyers.models import BuyerShippingAddress, Order, OrderItem, PaymentMethod, SellerShippingAddress
 
-from .models import Product
+from .models import Product, ReturnRequest
+from .seeding import SEED_PRODUCTS, clear_products, seed_products
+
+
+TEST_PNG_BYTES = (
+    b'\x89PNG\r\n\x1a\n'
+    b'\x00\x00\x00\rIHDR'
+    b'\x00\x00\x00\x01\x00\x00\x00\x01\x08\x02\x00\x00\x00'
+    b'\x90wS\xde'
+    b'\x00\x00\x00\x0cIDATx\x9cc\xf8\xcf\xc0\x00\x00\x03\x01\x01\x00'
+    b'\xc9\xfe\x92\xef'
+    b'\x00\x00\x00\x00IEND\xaeB`\x82'
+)
 
 
 class ProductWorkflowTests(TestCase):
@@ -42,6 +58,25 @@ class ProductWorkflowTests(TestCase):
         self.assertIsNone(product.deleted_at)
         self.assertEqual(approval_request.status, 'pending')
         self.assertIsNone(approval_request.approved)
+
+    def test_product_creation_accepts_image_upload(self):
+        with tempfile.TemporaryDirectory() as media_root:
+            with override_settings(MEDIA_ROOT=media_root):
+                upload = SimpleUploadedFile('hoodie.png', TEST_PNG_BYTES, content_type='image/png')
+
+                response = self.client.post(reverse('product_creation'), {
+                    'image': upload,
+                    'product_name': 'Image Hoodie',
+                    'category': 'Hoodie',
+                    'price': '42.00',
+                    'stock': 7,
+                    'description': 'Soft fleece hoodie with image',
+                })
+
+                self.assertRedirects(response, reverse('product_list'))
+                product = Product.objects.get(product_name='Image Hoodie')
+                self.assertTrue(bool(product.image))
+                self.assertIn('status_icons/', product.image.name)
 
     def test_soft_delete_marks_product_inactive(self):
         # Deleting from the seller UI should soft-delete instead of removing the row entirely.
@@ -474,3 +509,571 @@ class ProductWorkflowTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'Completed Sales Earnings')
         self.assertContains(response, '$75.00')
+
+    def test_buyer_can_create_return_request_for_completed_item(self):
+        buyer = User.objects.create_user(
+            username='buyer_return',
+            password='StrongPass123!',
+            first_name='Buyer',
+            last_name='Return',
+            email='buyerreturn@example.com',
+            role='buyer',
+        )
+        buyer_address = BuyerShippingAddress.objects.create(
+            buyer=buyer,
+            label='Home',
+            recipient_name='Buyer Return',
+            address_line_1='10 Buyer Street',
+            city='Dublin',
+            state='Leinster',
+            postal_code='D10RET',
+            country='Ireland',
+            is_default=True,
+        )
+        payment_method = PaymentMethod.objects.create(
+            buyer=buyer,
+            label='Card',
+            cardholder_name='Buyer Return',
+            card_brand='visa',
+            full_card_number='4111111111111111',
+            last_four='1111',
+            expiry_month=12,
+            expiry_year=2030,
+            is_default=True,
+        )
+        seller_address = SellerShippingAddress.objects.create(
+            seller=self.seller,
+            label='Warehouse',
+            recipient_name='Seller One',
+            address_line_1='123 Warehouse Road',
+            city='Dublin',
+            state='Leinster',
+            postal_code='D01SELL',
+            country='Ireland',
+            is_default=True,
+        )
+        order = Order.objects.create(
+            buyer=buyer,
+            buyer_shipping_address=buyer_address,
+            payment_method=payment_method,
+            order_number='ORD-RETURN-1',
+            subtotal='40.00',
+            shipping_cost='6.99',
+            tax_amount='2.80',
+            grand_total='49.79',
+            status='completed',
+        )
+        product = Product.objects.create(
+            seller_id=self.seller,
+            product_name='Return Hoodie',
+            category='Hoodie',
+            price='40.00',
+            stock=5,
+            description='Returnable hoodie',
+            active=True,
+            status='approved',
+            redirect_to=None,
+            deleted_at=None,
+        )
+        order_item = OrderItem.objects.create(
+            order=order,
+            product=product,
+            seller=self.seller,
+            seller_shipping_address=seller_address,
+            product_name='Return Hoodie',
+            item_status='completed',
+            unit_price='40.00',
+            quantity=1,
+            line_total='40.00',
+        )
+
+        self.client.force_login(buyer)
+        response = self.client.post(reverse('request_return', args=[order_item.id]), {'reason': 'Item did not fit.'})
+
+        self.assertRedirects(response, reverse('buyer_return_requests'))
+        return_request = ReturnRequest.objects.get(order_item=order_item)
+        self.assertEqual(return_request.status, 'pending')
+        self.assertEqual(return_request.reason, 'Item did not fit.')
+
+    def test_buyer_and_seller_can_view_pending_return_requests(self):
+        buyer = User.objects.create_user(
+            username='buyer_pending_return',
+            password='StrongPass123!',
+            first_name='Buyer',
+            last_name='Pending',
+            email='buyerpending@example.com',
+            role='buyer',
+        )
+        buyer_address = BuyerShippingAddress.objects.create(
+            buyer=buyer,
+            label='Home',
+            recipient_name='Buyer Pending',
+            address_line_1='11 Buyer Street',
+            city='Dublin',
+            state='Leinster',
+            postal_code='D11RET',
+            country='Ireland',
+            is_default=True,
+        )
+        payment_method = PaymentMethod.objects.create(
+            buyer=buyer,
+            label='Card',
+            cardholder_name='Buyer Pending',
+            card_brand='visa',
+            full_card_number='4222222222222',
+            last_four='2222',
+            expiry_month=12,
+            expiry_year=2030,
+            is_default=True,
+        )
+        seller_address = SellerShippingAddress.objects.create(
+            seller=self.seller,
+            label='Warehouse',
+            recipient_name='Seller One',
+            address_line_1='123 Warehouse Road',
+            city='Dublin',
+            state='Leinster',
+            postal_code='D01SELL',
+            country='Ireland',
+            is_default=True,
+        )
+        order = Order.objects.create(
+            buyer=buyer,
+            buyer_shipping_address=buyer_address,
+            payment_method=payment_method,
+            order_number='ORD-RETURN-2',
+            subtotal='30.00',
+            shipping_cost='6.99',
+            tax_amount='2.10',
+            grand_total='39.09',
+            status='completed',
+        )
+        product = Product.objects.create(
+            seller_id=self.seller,
+            product_name='Pending Return Tee',
+            category='T-Shirt',
+            price='30.00',
+            stock=5,
+            description='Pending return tee',
+            active=True,
+            status='approved',
+            redirect_to=None,
+            deleted_at=None,
+        )
+        order_item = OrderItem.objects.create(
+            order=order,
+            product=product,
+            seller=self.seller,
+            seller_shipping_address=seller_address,
+            product_name='Pending Return Tee',
+            item_status='completed',
+            unit_price='30.00',
+            quantity=1,
+            line_total='30.00',
+        )
+        ReturnRequest.objects.create(order_item=order_item, reason='Wrong size')
+
+        self.client.force_login(buyer)
+        buyer_response = self.client.get(reverse('buyer_return_requests'))
+        self.assertEqual(buyer_response.status_code, 200)
+        self.assertContains(buyer_response, 'Pending Return Tee')
+
+        self.client.force_login(self.seller)
+        seller_response = self.client.get(reverse('seller_return_requests'))
+        self.assertEqual(seller_response.status_code, 200)
+        self.assertContains(seller_response, 'Pending Return Tee')
+        self.assertContains(seller_response, 'Wrong size')
+
+    def test_seller_can_approve_return_request(self):
+        buyer = User.objects.create_user(
+            username='buyer_return_approve',
+            password='StrongPass123!',
+            first_name='Buyer',
+            last_name='Approve',
+            email='buyerapprove@example.com',
+            role='buyer',
+        )
+        buyer_address = BuyerShippingAddress.objects.create(
+            buyer=buyer,
+            label='Home',
+            recipient_name='Buyer Approve',
+            address_line_1='12 Buyer Street',
+            city='Dublin',
+            state='Leinster',
+            postal_code='D12RET',
+            country='Ireland',
+            is_default=True,
+        )
+        payment_method = PaymentMethod.objects.create(
+            buyer=buyer,
+            label='Card',
+            cardholder_name='Buyer Approve',
+            card_brand='visa',
+            full_card_number='4333333333333333',
+            last_four='3333',
+            expiry_month=12,
+            expiry_year=2030,
+            is_default=True,
+        )
+        seller_address = SellerShippingAddress.objects.create(
+            seller=self.seller,
+            label='Warehouse',
+            recipient_name='Seller One',
+            address_line_1='123 Warehouse Road',
+            city='Dublin',
+            state='Leinster',
+            postal_code='D01SELL',
+            country='Ireland',
+            is_default=True,
+        )
+        order = Order.objects.create(
+            buyer=buyer,
+            buyer_shipping_address=buyer_address,
+            payment_method=payment_method,
+            order_number='ORD-RETURN-3',
+            subtotal='25.00',
+            shipping_cost='6.99',
+            tax_amount='1.75',
+            grand_total='33.74',
+            status='completed',
+        )
+        product = Product.objects.create(
+            seller_id=self.seller,
+            product_name='Approve Return Cap',
+            category='Accessories',
+            price='25.00',
+            stock=5,
+            description='Return cap',
+            active=True,
+            status='approved',
+            redirect_to=None,
+            deleted_at=None,
+        )
+        order_item = OrderItem.objects.create(
+            order=order,
+            product=product,
+            seller=self.seller,
+            seller_shipping_address=seller_address,
+            product_name='Approve Return Cap',
+            item_status='completed',
+            unit_price='25.00',
+            quantity=1,
+            line_total='25.00',
+        )
+        return_request = ReturnRequest.objects.create(order_item=order_item, reason='Changed mind')
+
+        original_stock = product.stock
+
+        response = self.client.post(reverse('approve_return', args=[return_request.id]))
+
+        self.assertRedirects(response, reverse('seller_return_requests'))
+        return_request.refresh_from_db()
+        order_item.refresh_from_db()
+        order.refresh_from_db()
+        product.refresh_from_db()
+        self.assertEqual(return_request.status, 'approved')
+        self.assertEqual(order_item.item_status, 'returned')
+        self.assertEqual(order.status, 'completed')
+        self.assertEqual(product.stock, original_stock + 1)
+
+    def test_seller_order_history_does_not_count_approved_return_in_completed_earnings(self):
+        buyer = User.objects.create_user(
+            username='buyer_return_earnings',
+            password='StrongPass123!',
+            first_name='Buyer',
+            last_name='ReturnEarnings',
+            email='buyerreturnearnings@example.com',
+            role='buyer',
+        )
+        buyer_address = BuyerShippingAddress.objects.create(
+            buyer=buyer,
+            label='Home',
+            recipient_name='Buyer Return Earnings',
+            address_line_1='13 Buyer Street',
+            city='Dublin',
+            state='Leinster',
+            postal_code='D13RET',
+            country='Ireland',
+            is_default=True,
+        )
+        payment_method = PaymentMethod.objects.create(
+            buyer=buyer,
+            label='Card',
+            cardholder_name='Buyer Return Earnings',
+            card_brand='visa',
+            full_card_number='4444333322221111',
+            last_four='1111',
+            expiry_month=12,
+            expiry_year=2030,
+            is_default=True,
+        )
+        seller_address = SellerShippingAddress.objects.create(
+            seller=self.seller,
+            label='Warehouse',
+            recipient_name='Seller One',
+            address_line_1='123 Warehouse Road',
+            city='Dublin',
+            state='Leinster',
+            postal_code='D01SELL',
+            country='Ireland',
+            is_default=True,
+        )
+        order = Order.objects.create(
+            buyer=buyer,
+            buyer_shipping_address=buyer_address,
+            payment_method=payment_method,
+            order_number='ORD-RETURN-EARNINGS',
+            subtotal='50.00',
+            shipping_cost='6.99',
+            tax_amount='3.50',
+            grand_total='60.49',
+            status='completed',
+        )
+        product = Product.objects.create(
+            seller_id=self.seller,
+            product_name='Returned Sweatshirt',
+            category='Sweater',
+            price='50.00',
+            stock=2,
+            description='Returned sweatshirt',
+            active=True,
+            status='approved',
+            redirect_to=None,
+            deleted_at=None,
+        )
+        order_item = OrderItem.objects.create(
+            order=order,
+            product=product,
+            seller=self.seller,
+            seller_shipping_address=seller_address,
+            product_name='Returned Sweatshirt',
+            item_status='returned',
+            unit_price='50.00',
+            quantity=1,
+            line_total='50.00',
+        )
+        ReturnRequest.objects.create(order_item=order_item, reason='Damaged item', status='approved')
+
+        response = self.client.get(reverse('seller_order_history'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Completed Sales Earnings')
+        self.assertContains(response, '$0.00')
+        self.assertContains(response, 'Earned After Returns:')
+
+    def test_approving_return_updates_history_badges_and_earnings(self):
+        buyer = User.objects.create_user(
+            username='buyer_badge_return',
+            password='StrongPass123!',
+            first_name='Buyer',
+            last_name='Badge',
+            email='buyerbadge@example.com',
+            role='buyer',
+        )
+        buyer_address = BuyerShippingAddress.objects.create(
+            buyer=buyer,
+            label='Home',
+            recipient_name='Buyer Badge',
+            address_line_1='14 Buyer Street',
+            city='Dublin',
+            state='Leinster',
+            postal_code='D14RET',
+            country='Ireland',
+            is_default=True,
+        )
+        payment_method = PaymentMethod.objects.create(
+            buyer=buyer,
+            label='Card',
+            cardholder_name='Buyer Badge',
+            card_brand='visa',
+            full_card_number='4555555555555555',
+            last_four='5555',
+            expiry_month=12,
+            expiry_year=2030,
+            is_default=True,
+        )
+        seller_address = SellerShippingAddress.objects.create(
+            seller=self.seller,
+            label='Warehouse',
+            recipient_name='Seller One',
+            address_line_1='123 Warehouse Road',
+            city='Dublin',
+            state='Leinster',
+            postal_code='D01SELL',
+            country='Ireland',
+            is_default=True,
+        )
+        order = Order.objects.create(
+            buyer=buyer,
+            buyer_shipping_address=buyer_address,
+            payment_method=payment_method,
+            order_number='ORD-RETURN-BADGE',
+            subtotal='35.00',
+            shipping_cost='6.99',
+            tax_amount='2.45',
+            grand_total='44.44',
+            status='completed',
+        )
+        product = Product.objects.create(
+            seller_id=self.seller,
+            product_name='Badge Return Hoodie',
+            category='Hoodie',
+            price='35.00',
+            stock=1,
+            description='Badge return hoodie',
+            active=True,
+            status='approved',
+            redirect_to=None,
+            deleted_at=None,
+        )
+        order_item = OrderItem.objects.create(
+            order=order,
+            product=product,
+            seller=self.seller,
+            seller_shipping_address=seller_address,
+            product_name='Badge Return Hoodie',
+            item_status='completed',
+            unit_price='35.00',
+            quantity=1,
+            line_total='35.00',
+        )
+        return_request = ReturnRequest.objects.create(order_item=order_item, reason='Damaged seam')
+
+        self.client.post(reverse('approve_return', args=[return_request.id]))
+        seller_history = self.client.get(reverse('seller_order_history'))
+
+        self.assertEqual(seller_history.status_code, 200)
+        self.assertContains(seller_history, 'status-returned')
+        self.assertContains(seller_history, 'status-approved')
+        self.assertContains(seller_history, 'Total earned from completed order items after approved returns: $0.00')
+        self.assertContains(seller_history, 'Earned After Returns:</strong> $0.00')
+
+
+class ProductSeedDataTests(TestCase):
+    def test_seed_data_contains_thirty_products(self):
+        self.assertEqual(len(SEED_PRODUCTS), 30)
+
+    def test_seed_data_covers_every_category(self):
+        seeded_categories = {product['category'] for product in SEED_PRODUCTS}
+        model_categories = {value for value, _ in Product.CATEGORY_CHOICES}
+
+        self.assertSetEqual(seeded_categories, model_categories)
+
+    def test_seed_products_repairs_existing_seed_seller_password(self):
+        User.objects.create(
+            username='seed_seller',
+            password='',
+            first_name='',
+            last_name='',
+            email='',
+            role='buyer',
+        )
+
+        seed_products()
+
+        seller = User.objects.get(username='seed_seller')
+        self.assertTrue(seller.check_password('SeedSeller123!'))
+        self.assertEqual(seller.role, 'seller')
+        self.assertEqual(seller.email, 'seed_seller@example.com')
+
+    def test_clear_products_removes_related_orders_and_product_requests(self):
+        seller = User.objects.create_user(
+            username='seedclear-seller',
+            password='StrongPass123!',
+            first_name='Seed',
+            last_name='Seller',
+            email='seedclear-seller@example.com',
+            role='seller',
+        )
+        buyer = User.objects.create_user(
+            username='seedclear-buyer',
+            password='StrongPass123!',
+            first_name='Seed',
+            last_name='Buyer',
+            email='seedclear-buyer@example.com',
+            role='buyer',
+        )
+        buyer_address = BuyerShippingAddress.objects.create(
+            buyer=buyer,
+            label='Home',
+            recipient_name='Seed Buyer',
+            address_line_1='1 Test Street',
+            city='Dublin',
+            state='Leinster',
+            postal_code='D01TEST',
+            country='Ireland',
+            is_default=True,
+        )
+        payment_method = PaymentMethod.objects.create(
+            buyer=buyer,
+            label='Card',
+            cardholder_name='Seed Buyer',
+            card_brand='visa',
+            full_card_number='4111111111111111',
+            last_four='1111',
+            expiry_month=12,
+            expiry_year=2030,
+            is_default=True,
+        )
+        seller_address = SellerShippingAddress.objects.create(
+            seller=seller,
+            label='Warehouse',
+            recipient_name='Seed Seller',
+            address_line_1='1 Warehouse Way',
+            city='Dublin',
+            state='Leinster',
+            postal_code='D02TEST',
+            country='Ireland',
+            is_default=True,
+        )
+        product = Product.objects.create(
+            seller_id=seller,
+            product_name='Seed Cleanup Product',
+            category='Jacket',
+            price='49.99',
+            stock=5,
+            description='Cleanup test product',
+            active=True,
+            status='approved',
+            redirect_to=None,
+            deleted_at=None,
+        )
+        ProductApprovalRequest.submit_product(product=product, seller=seller)
+        order = Order.objects.create(
+            buyer=buyer,
+            buyer_shipping_address=buyer_address,
+            payment_method=payment_method,
+            order_number='ORD-SEED-CLEAR',
+            subtotal='49.99',
+            shipping_cost='6.99',
+            tax_amount='3.50',
+            grand_total='60.48',
+        )
+        OrderItem.objects.create(
+            order=order,
+            product=product,
+            seller=seller,
+            seller_shipping_address=seller_address,
+            product_name='Seed Cleanup Product',
+            unit_price='49.99',
+            quantity=1,
+            line_total='49.99',
+        )
+
+        deleted_count = clear_products()
+
+        self.assertGreater(deleted_count, 0)
+        self.assertEqual(Order.objects.count(), 0)
+        self.assertEqual(OrderItem.objects.count(), 0)
+        self.assertEqual(ProductApprovalRequest.objects.count(), 0)
+        self.assertEqual(Product.objects.count(), 0)
+
+    def test_seed_products_creates_images_for_seeded_products(self):
+        with tempfile.TemporaryDirectory() as media_root:
+            with override_settings(MEDIA_ROOT=media_root):
+                seeded_count = seed_products()
+
+                self.assertEqual(seeded_count, len(SEED_PRODUCTS))
+                first_product = Product.objects.exclude(image='').exclude(image__isnull=True).first()
+                self.assertIsNotNone(first_product)
+                self.assertTrue(first_product.image.name.endswith('.png'))

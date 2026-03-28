@@ -112,6 +112,13 @@
             padding-left: 20px;
         }
 
+        .helptext {
+            display: block;
+            margin-top: 6px;
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+
         footer {
             background-color: #2c3e50;
             color: white;
@@ -134,6 +141,7 @@
         <a href="{% url 'product_creation' %}">Add Product</a>
         <a href="{% url 'seller_order_history' %}">Order History</a>
         <a href="{% url 'seller_shipping_address' %}">Shipping Address</a>
+        <a href="{% url 'account_logout' %}">Logout</a>
     
     </nav>
 
@@ -149,32 +157,46 @@
                 </p>
             {% endif %}
 
-            <form method="post">
+            <form method="post" enctype="multipart/form-data">
                 {% csrf_token %}
+
+                {{ form.non_field_errors }}
+
+                <div class="field">
+                    <label for="{{ form.image.id_for_label }}">Product Image</label>
+                    {{ form.image }}
+                    {{ form.image.errors }}
+                    <small class="helptext">Upload a .jpg or .png image to show this product on the buyer homepage.</small>
+                </div>
 
                 <div class="field">
                     <label for="{{ form.product_name.id_for_label }}">Product Name</label>
                     {{ form.product_name }}
+                    {{ form.product_name.errors }}
                 </div>
 
                 <div class="field">
                     <label for="{{ form.category.id_for_label }}">Category</label>
                     {{ form.category }}
+                    {{ form.category.errors }}
                 </div>
 
                 <div class="field">
                     <label for="{{ form.price.id_for_label }}">Price</label>
                     {{ form.price }}
+                    {{ form.price.errors }}
                 </div>
 
                 <div class="field">
                     <label for="{{ form.stock.id_for_label }}">Stock Quantity</label>
                     {{ form.stock }}
+                    {{ form.stock.errors }}
                 </div>
 
                 <div class="field">
                     <label for="{{ form.description.id_for_label }}">Description</label>
                     {{ form.description }}
+                    {{ form.description.errors }}
                 </div>
 
                 <p>Your product will be submitted for admin review after creation.</p>

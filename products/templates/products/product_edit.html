@@ -80,6 +80,21 @@
             flex-wrap: wrap;
         }
 
+        .current-image {
+            width: 180px;
+            border-radius: 8px;
+            display: block;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .helptext {
+            display: block;
+            margin-top: 6px;
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+
         .btn {
             padding: 10px 14px;
             border: none;
@@ -121,6 +136,10 @@
     <nav>
         <a href="{% url 'seller_home' %}">Home</a>
         <a href="{% url 'product_list' %}">My Listings</a>
+        <a href="{% url 'seller_order_history' %}">Order History</a>
+        <a href="{% url 'seller_shipping_address' %}">Shipping Address</a>
+        <a href="{% url 'account_logout' %}">Logout</a>
+        <a href="{% url 'product_list' %}">My Listings</a>
         <a href="{% url 'product_creation' %}">Add Product</a>
         
     </nav>
@@ -130,32 +149,49 @@
         <div class="form-card">
             <h2>Edit {{ product.product_name }}</h2>
 
-            <form method="post">
+            <form method="post" enctype="multipart/form-data">
                 {% csrf_token %}
+
+                {{ form.non_field_errors }}
+
+                <div class="field">
+                    <label for="{{ form.image.id_for_label }}">Product Image</label>
+                    {% if product.image %}
+                        <img class="current-image" src="{{ product.image.url }}" alt="Current image for {{ product.product_name }}">
+                    {% endif %}
+                    {{ form.image }}
+                    {{ form.image.errors }}
+                    <small class="helptext">Leave this blank to keep the current image.</small>
+                </div>
 
                 <div class="field">
                     <label for="{{ form.product_name.id_for_label }}">Product Name</label>
                     {{ form.product_name }}
+                    {{ form.product_name.errors }}
                 </div>
 
                 <div class="field">
                     <label for="{{ form.category.id_for_label }}">Category</label>
                     {{ form.category }}
+                    {{ form.category.errors }}
                 </div>
 
                 <div class="field">
                     <label for="{{ form.price.id_for_label }}">Price</label>
                     {{ form.price }}
+                    {{ form.price.errors }}
                 </div>
 
                 <div class="field">
                     <label for="{{ form.stock.id_for_label }}">Stock Quantity</label>
                     {{ form.stock }}
+                    {{ form.stock.errors }}
                 </div>
 
                 <div class="field">
                     <label for="{{ form.description.id_for_label }}">Description</label>
                     {{ form.description }}
+                    {{ form.description.errors }}
                 </div>
 
                 <div class="actions">
