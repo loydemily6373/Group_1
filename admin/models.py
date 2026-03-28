@@ -1,6 +1,62 @@
 from django.db import models
 
 
+class UserActivity(models.Model):
+    # Keep one admin-facing activity summary row per user while still storing the user link as a foreign key.
+    user = models.ForeignKey('accounts.User', on_delete=models.CASCADE, related_name='activity_entries')
+    username = models.CharField(max_length=150)
+    role = models.CharField(max_length=10)
+    login_count = models.PositiveIntegerField(default=0)
+    purchase_count = models.PositiveIntegerField(default=0)
+    completed_sales_count = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['user'], name='unique_user_activity_entry'),
+        ]
+
+    @classmethod
+    def get_or_create_for_user(cls, user):
+        activity, _ = cls.objects.get_or_create(
+            user=user,
+            defaults={
+                'username': user.username,
+                'role': user.role,
+            },
+        )
+        return activity
+
+    @classmethod
+    def record_login(cls, user, increment=1):
+        activity = cls.get_or_create_for_user(user)
+        activity.username = user.username
+        activity.role = user.role
+        activity.login_count += increment
+        activity.save(update_fields=['username', 'role', 'login_count'])
+        return activity
+
+    @classmethod
+    def record_purchase(cls, user, increment=1):
+        activity = cls.get_or_create_for_user(user)
+        activity.username = user.username
+        activity.role = user.role
+        activity.purchase_count += increment
+        activity.save(update_fields=['username', 'role', 'purchase_count'])
+        return activity
+
+    @classmethod
+    def record_completed_sale(cls, user, increment=1):
+        activity = cls.get_or_create_for_user(user)
+        activity.username = user.username
+        activity.role = user.role
+        activity.completed_sales_count += increment
+        activity.save(update_fields=['username', 'role', 'completed_sales_count'])
+        return activity
+
+    def __str__(self):
+        return f"{self.username} ({self.role})"
+
+
 class ProductApprovalRequest(models.Model):
     REQUEST_TYPE_CHOICES = [
         ('create', 'Create'),

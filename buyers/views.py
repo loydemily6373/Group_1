@@ -2,12 +2,15 @@ from decimal import Decimal
 import uuid
 
 from django.contrib import messages
+from django.core.paginator import Paginator
 from django.db import transaction
+from django.db.models import Q
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 
+from admin.models import UserActivity
 from accounts.permissions import role_required
-from products.models  import Product
+from sellers.models import Product
 
 from .forms import BuyerShippingAddressForm, PaymentMethodForm
 from .models import BuyerShippingAddress, CartItem, Order, OrderItem, PaymentMethod, SellerShippingAddress
@@ -152,8 +155,32 @@ def _generate_order_number():
 @role_required('buyer')
 def buyer_homepage(request):
     # Restrict buyer pages to logged-in buyers now that login also creates a session.
+    search_query = request.GET.get('q', '').strip()
+    selected_category = request.GET.get('category', '').strip()
+
     products = Product.objects.filter(active=True, status='approved', deleted_at__isnull=True)
-    context = {'products': products}
+
+    if search_query:
+        products = products.filter(
+            Q(product_name__icontains=search_query)
+            | Q(description__icontains=search_query)
+            | Q(category__icontains=search_query)
+        )
+
+    if selected_category:
+        products = products.filter(category=selected_category)
+
+    products = products.order_by('id')
+    paginator = Paginator(products, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    context = {
+        'products': page_obj.object_list,
+        'page_obj': page_obj,
+        'search_query': search_query,
+        'selected_category': selected_category,
+        'category_choices': [choice[0] for choice in Product.CATEGORY_CHOICES],
+    }
     return render(request, 'buyer_home.html',context)
 
 
@@ -162,6 +189,7 @@ def buyer_order_history(request):
     orders = Order.objects.filter(buyer=request.user).prefetch_related(
         'items__seller',
         'items__seller_shipping_address',
+        'items__return_request',
     ).select_related(
         'buyer_shipping_address',
         'payment_method',
@@ -283,6 +311,8 @@ def checkout_view(request):
                             quantity=row['quantity'],
                             line_total=round(row['item_total'], 2),
                         )
+
+                        UserActivity.record_purchase(request.user, increment=row['quantity'])
 
                         product.stock -= row['quantity']
                         product.save(update_fields=['stock'])

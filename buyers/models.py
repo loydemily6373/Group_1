@@ -99,6 +99,7 @@ class OrderItem(models.Model):
 		('processing', 'Processing'),
 		('shipped', 'Shipped'),
 		('completed', 'Completed'),
+		('returned', 'Returned'),
 	]
 
 	# Snapshot purchase details per seller so one order can contain items from multiple sellers.
@@ -111,6 +112,14 @@ class OrderItem(models.Model):
 	unit_price = models.DecimalField(max_digits=10, decimal_places=2)
 	quantity = models.PositiveIntegerField()
 	line_total = models.DecimalField(max_digits=10, decimal_places=2)
+
+	@property
+	def return_request_record(self):
+		return getattr(self, 'return_request', None)
+
+	@property
+	def can_request_return(self):
+		return self.item_status == 'completed' and self.return_request_record is None
 
 	def __str__(self):
 		return f"{self.order.order_number} - {self.product_name}"

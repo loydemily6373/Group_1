@@ -1,11 +1,26 @@
+import tempfile
+
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
+from django.test import override_settings
 from django.urls import reverse
 from decimal import Decimal
 
 from accounts.models import User
-from products.models import Product
+from sellers.models import Product
 
 from .models import BuyerShippingAddress, CartItem, Order, OrderItem, PaymentMethod, SellerShippingAddress
+
+
+TEST_PNG_BYTES = (
+	b'\x89PNG\r\n\x1a\n'
+	b'\x00\x00\x00\rIHDR'
+	b'\x00\x00\x00\x01\x00\x00\x00\x01\x08\x02\x00\x00\x00'
+	b'\x90wS\xde'
+	b'\x00\x00\x00\x0cIDATx\x9cc\xf8\xcf\xc0\x00\x00\x03\x01\x01\x00'
+	b'\xc9\xfe\x92\xef'
+	b'\x00\x00\x00\x00IEND\xaeB`\x82'
+)
 
 
 class DatabaseCartTests(TestCase):
@@ -77,6 +92,171 @@ class DatabaseCartTests(TestCase):
 		self.assertEqual(response.status_code, 200)
 		self.assertContains(response, 'Jacket')
 		self.assertEqual(response.context['subtotal'], Decimal('50.00'))
+
+
+class BuyerHomepageTests(TestCase):
+	def setUp(self):
+		self.buyer = User.objects.create_user(
+			username='homebuyer',
+			password='StrongPass123!',
+			first_name='Home',
+			last_name='Buyer',
+			email='homebuyer@example.com',
+			role='buyer',
+		)
+		self.client.force_login(self.buyer)
+
+	def test_buyer_homepage_paginates_to_ten_products_per_page(self):
+		for index in range(12):
+			Product.objects.create(
+				seller_id=self.buyer,
+				product_name=f'Product {index}',
+				category='Jacket',
+				price='10.00',
+				stock=5,
+				active=True,
+				redirect_to=None,
+				status='approved',
+				description='Paged product',
+				deleted_at=None,
+			)
+
+		response = self.client.get(reverse('buyer_home'))
+
+		self.assertEqual(response.status_code, 200)
+		self.assertEqual(len(response.context['products']), 10)
+		self.assertTrue(response.context['page_obj'].has_next())
+
+	def test_buyer_homepage_second_page_shows_remaining_products(self):
+		for index in range(12):
+			Product.objects.create(
+				seller_id=self.buyer,
+				product_name=f'Product {index}',
+				category='Shoes',
+				price='10.00',
+				stock=5,
+				active=True,
+				redirect_to=None,
+				status='approved',
+				description='Paged product',
+				deleted_at=None,
+			)
+
+		response = self.client.get(reverse('buyer_home'), {'page': 2})
+
+		self.assertEqual(response.status_code, 200)
+		self.assertEqual(len(response.context['products']), 2)
+		self.assertEqual(response.context['page_obj'].number, 2)
+
+	def test_buyer_homepage_includes_category_search_data(self):
+		Product.objects.create(
+			seller_id=self.buyer,
+			product_name='Category Coat',
+			category='Jacket',
+			price='35.00',
+			stock=5,
+			active=True,
+			redirect_to=None,
+			status='approved',
+			description='Category searchable product',
+			deleted_at=None,
+		)
+
+		response = self.client.get(reverse('buyer_home'))
+
+		self.assertEqual(response.status_code, 200)
+		self.assertContains(response, 'All categories')
+		self.assertContains(response, 'Category: Jacket')
+
+	def test_buyer_homepage_search_filters_across_catalogue(self):
+		for index in range(11):
+			Product.objects.create(
+				seller_id=self.buyer,
+				product_name=f'Alpha Product {index}',
+				category='Jacket',
+				price='10.00',
+				stock=5,
+				active=True,
+				redirect_to=None,
+				status='approved',
+				description='Searchable alpha product',
+				deleted_at=None,
+			)
+		Product.objects.create(
+			seller_id=self.buyer,
+			product_name='Beta Product',
+			category='Shoes',
+			price='10.00',
+			stock=5,
+			active=True,
+			redirect_to=None,
+			status='approved',
+			description='Different search term',
+			deleted_at=None,
+		)
+
+		response = self.client.get(reverse('buyer_home'), {'q': 'Alpha'})
+
+		self.assertEqual(response.status_code, 200)
+		self.assertEqual(response.context['page_obj'].paginator.count, 11)
+		self.assertEqual(len(response.context['products']), 10)
+		self.assertContains(response, 'Showing 11 results')
+		self.assertContains(response, 'for "Alpha"')
+
+	def test_buyer_homepage_category_filter_works_server_side(self):
+		Product.objects.create(
+			seller_id=self.buyer,
+			product_name='Jacket Product',
+			category='Jacket',
+			price='10.00',
+			stock=5,
+			active=True,
+			redirect_to=None,
+			status='approved',
+			description='Jacket item',
+			deleted_at=None,
+		)
+		Product.objects.create(
+			seller_id=self.buyer,
+			product_name='Shoe Product',
+			category='Shoes',
+			price='10.00',
+			stock=5,
+			active=True,
+			redirect_to=None,
+			status='approved',
+			description='Shoe item',
+			deleted_at=None,
+		)
+
+		response = self.client.get(reverse('buyer_home'), {'category': 'Shoes'})
+
+		self.assertEqual(response.status_code, 200)
+		self.assertEqual(response.context['page_obj'].paginator.count, 1)
+		self.assertContains(response, 'Shoe Product')
+		self.assertNotContains(response, 'Jacket Product')
+
+	@override_settings(MEDIA_ROOT=tempfile.gettempdir())
+	def test_buyer_homepage_displays_product_image_when_available(self):
+		upload = SimpleUploadedFile('homepage.png', TEST_PNG_BYTES, content_type='image/png')
+		product = Product.objects.create(
+			seller_id=self.buyer,
+			image=upload,
+			product_name='Image Product',
+			category='Jacket',
+			price='10.00',
+			stock=5,
+			active=True,
+			redirect_to=None,
+			status='approved',
+			description='Image product',
+			deleted_at=None,
+		)
+
+		response = self.client.get(reverse('buyer_home'))
+
+		self.assertEqual(response.status_code, 200)
+		self.assertContains(response, f'src="{product.image.url}"')
 
 
 class CheckoutFlowTests(TestCase):

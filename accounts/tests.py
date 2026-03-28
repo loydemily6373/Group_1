@@ -166,3 +166,20 @@ class AuthenticationFlowTests(TestCase):
 		response = self.client.get(reverse('buyer_home'))
 
 		self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+	def test_logout_view_clears_session_and_redirects_home(self):
+		buyer_user = User.objects.create_user(
+			username='logout_buyer',
+			password='StrongPass123!',
+			first_name='Logout',
+			last_name='Buyer',
+			email='logoutbuyer@example.com',
+			role='buyer',
+		)
+
+		self.client.force_login(buyer_user)
+		response = self.client.get(reverse('account_logout'))
+
+		self.assertRedirects(response, reverse('index'))
+		protected_page = self.client.get(reverse('buyer_home'))
+		self.assertEqual(protected_page.status_code, status.HTTP_302_FOUND)

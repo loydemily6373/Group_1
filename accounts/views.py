@@ -1,6 +1,7 @@
-from django.contrib.auth import login
-from django.shortcuts import render
+from django.contrib.auth import login, logout
+from django.shortcuts import redirect, render
 
+from admin.models import UserActivity
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -28,6 +29,7 @@ class LoginTokenView(APIView):
 
         # Create a normal Django session cookie so server-rendered pages can trust request.user.
         login(request, serializer.user)
+        UserActivity.record_login(serializer.user)
 
         return Response(serializer.validated_data, status=status.HTTP_200_OK)
 
@@ -46,8 +48,15 @@ def signup_view(request):
     return render(request, "account_signup.html")
 
 
+def logout_view(request):
+    # End the authenticated session and send the user back to the public landing page.
+    logout(request)
+    return redirect('index')
+
+
 @role_required('admin')
 def admin_home(request):
     # Only admins should be able to load the admin landing page.
-    return render(request, 'admin.html')
+    activity_rows = UserActivity.objects.select_related('user').order_by('role', 'username')
+    return render(request, 'admin.html', {'activity_rows': activity_rows})
 
