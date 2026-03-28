@@ -9,13 +9,13 @@ import django
 
 django.setup()
 
-from products.seeding import clear_products, reset_products, seed_products
+from sellers.seeding import clear_products, reset_products, seed_products
 
 
 def _print_clear_products():
     # Print a friendly message for standalone script usage.
     deleted_count = clear_products()
-    print(f'Cleared existing product data. Deleted {deleted_count} database rows.')
+    print(f'Cleared existing product data plus related orders and product requests. Deleted {deleted_count} database rows.')
 
 
 def _print_seed_products():
@@ -27,7 +27,7 @@ def _print_seed_products():
 def _print_reset_products():
     # Reset first so repeated test runs always start from the same data.
     deleted_count, seeded_count = reset_products()
-    print(f'Cleared existing product data. Deleted {deleted_count} database rows.')
+    print(f'Cleared existing product data plus related orders and product requests. Deleted {deleted_count} database rows.')
     print(f'Seeded {seeded_count} products into the database.')
 
 
