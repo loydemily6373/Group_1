@@ -183,3 +183,20 @@ class AuthenticationFlowTests(TestCase):
 		self.assertRedirects(response, reverse('index'))
 		protected_page = self.client.get(reverse('buyer_home'))
 		self.assertEqual(protected_page.status_code, status.HTTP_302_FOUND)
+
+	# SQL injection test
+	def test_sql_injection_login(self):
+
+		response = self.client.post('/login/', {
+			'username': "' OR 1=1 --",
+			'password': 'anything'
+		})
+		self.assertNotIn('_auth_user_id', self.client.session)
+
+	def test_invalid_login_rejected(self):
+		response = self.client.post(reverse('login'), {
+			'username': 'wronguser',
+			'password': 'wrongpass'
+		})
+
+		self.assertEqual(response.status_code, 200)
