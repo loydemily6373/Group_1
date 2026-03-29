@@ -948,6 +948,28 @@ class ProductWorkflowTests(TestCase):
         self.assertContains(seller_history, 'Total earned from completed order items after approved returns: $0.00')
         self.assertContains(seller_history, 'Earned After Returns:</strong> $0.00')
 
+    # XSS test
+    def test_xss_in_product_name(self):
+        self.client.login(username='testuser', password='password')
+        response = self.client.post(reverse('product_creation'), {
+			'name': '<script>alert("hack")</script>',
+			'price': 10
+		})
+        self.assertNotContains(response, '<script>')
+
+    # verifying Django's built-in CSRF protection
+    def test_csrf_protection_product_creation(self):
+        client = Client(enforce_csrf_checks=True)
+
+        client.login(username='selleruser', password='password')
+
+        response = client.post(reverse('product_creation'), {
+            'name': 'Test Product',
+            'price': 10
+        })
+
+        self.assertEqual(response.status_code, 403)
+
 
 class ProductSeedDataTests(TestCase):
     def test_seed_data_contains_thirty_products(self):
