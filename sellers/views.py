@@ -34,7 +34,7 @@ def _update_parent_order_status(order):
 def seller_home(request):
     # Seller pages now require the logged-in user to have the seller role.
     has_default_shipping_address = SellerShippingAddress.objects.filter(seller=request.user, is_default=True).exists()
-    return render(request, 'seller_home.html', {'has_default_shipping_address': has_default_shipping_address})
+    return render(request, 'products/seller_home.html', {'has_default_shipping_address': has_default_shipping_address})
 
 
 @role_required('seller')
@@ -53,7 +53,7 @@ def seller_shipping_address(request):
     else:
         form = SellerShippingAddressForm(instance=address)
 
-    return render(request, 'seller_shipping_address.html', {
+    return render(request, 'products/seller_shipping_address.html', {
         'form': form,
         'address': address,
     })
@@ -88,7 +88,7 @@ def seller_order_history(request):
             grouped_order['earned_total'] += order_item.line_total
             completed_earnings += order_item.line_total
 
-    return render(request, 'seller_order_history.html', {
+    return render(request, 'products/seller_order_history.html', {
         'grouped_orders': grouped_orders.values(),
         'item_status_choices': OrderItem.ITEM_STATUS_CHOICES,
         'completed_earnings': completed_earnings,
@@ -106,7 +106,7 @@ def seller_return_requests(request):
         'order_item__order__buyer',
     ).order_by('-created_at')
 
-    return render(request, 'seller_return_requests.html', {'pending_requests': pending_requests})
+    return render(request, 'products/seller_return_requests.html', {'pending_requests': pending_requests})
 
 
 @role_required('seller')
@@ -151,7 +151,7 @@ def request_return(request, item_id):
             return redirect('buyer_return_requests')
         messages.error(request, 'Please provide a reason for the return request.')
 
-    return render(request, 'return_form.html', {'order_item': order_item})
+    return render(request, 'products/return_form.html', {'order_item': order_item})
 
 
 @role_required('buyer')
@@ -165,7 +165,7 @@ def buyer_return_requests(request):
         'order_item__seller',
     ).order_by('-created_at')
 
-    return render(request, 'buyer_return_requests.html', {'pending_requests': pending_requests})
+    return render(request, 'products/buyer_return_requests.html', {'pending_requests': pending_requests})
 
 
 @role_required('seller')
@@ -190,7 +190,7 @@ def product_creation(request):
     else:
         form = ProductForm()
 
-    return render(request, 'product_creation.html', {
+    return render(request, 'products/product_creation.html', {
         'form': form,
         'has_default_shipping_address': has_default_shipping_address,
     })
@@ -200,7 +200,7 @@ def product_creation(request):
 def product_list(request):
     # Sellers should only see their own non-deleted listings.
     products = Product.objects.filter(seller_id=request.user, deleted_at__isnull=True)
-    return render(request, 'product_list.html', {'products': products})
+    return render(request, 'products/product_list.html', {'products': products})
 
 
 @role_required('seller')
@@ -244,7 +244,7 @@ def product_edit(request, id):
     else:
         form = ProductForm(instance=product)
 
-    return render(request, 'product_edit.html', {
+    return render(request, 'products/product_edit.html', {
         'form': form,
         'product': product
     })
@@ -259,7 +259,7 @@ def product_delete(request, id):
         product.soft_delete()
         return redirect('product_list')
 
-    return render(request, 'product_delete.html', {'product': product})
+    return render(request, 'products/product_delete.html', {'product': product})
 
 def approve_return(request, return_id):
     return_request = get_object_or_404(ReturnRequest, id=return_id, order_item__seller=request.user)

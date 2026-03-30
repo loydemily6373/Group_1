@@ -8,8 +8,6 @@ urlpatterns = [
     path('login/', login_view, name="login"),
     # The signup page is a normal HTML route; the form submits to /accounts/register/ via JavaScript.
     path('signup/', signup_view, name='signup'),
-    # Signout 
-    path('logout/',auth_views.LogoutView.as_view(next_page=reverse_lazy('index')),name='account_logout'),
     # Admin has a dedicated page route separate from Django's built-in admin URL namespace.
     path('admin-home/', admin_home, name='admin_home'),
     path('sellers/', include('sellers.urls')),

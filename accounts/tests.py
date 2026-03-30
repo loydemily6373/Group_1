@@ -15,7 +15,6 @@ class AuthenticationFlowTests(TestCase):
 		self.client = APIClient()
 
 	def test_signup_page_renders(self):
-		# This catches the old bug where the signup link pointed at a POST-only API endpoint.
 		response = self.client.get(reverse('signup'))
 		self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -37,6 +36,31 @@ class AuthenticationFlowTests(TestCase):
 		self.assertEqual(created_user.role, 'buyer')
 		self.assertEqual(created_user.email, 'buyer@example.com')
 		self.assertTrue(created_user.is_active)
+
+	def test_register_api_rejects_duplicate_username(self):
+		User.objects.create_user(
+			username='buyer_user',
+			password='StrongPass123!',
+			first_name='Existing',
+			last_name='User',
+			email='existing@example.com',
+			role='buyer',
+		)
+
+		payload = {
+			'username': 'buyer_user',
+			'password': 'StrongPass123!',
+			'first_name': 'Duplicate',
+			'last_name': 'User',
+			'email': 'duplicate@example.com',
+			'role': 'buyer',
+		}
+
+		response = self.client.post(reverse('account_register_api'), payload, format='json')
+
+		self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+		self.assertIn('username', response.data)
+		self.assertEqual(User.objects.filter(username='buyer_user').count(), 1)
 
 	def test_register_api_creates_inactive_seller_and_request(self):
 		# Seller signups should create the user account but hold login access until admin approval.
@@ -167,6 +191,22 @@ class AuthenticationFlowTests(TestCase):
 
 		self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
+	def test_wrong_role_cannot_open_seller_page(self):
+		# Logged-in buyers should be blocked from seller-only pages.
+		buyer_user = User.objects.create_user(
+			username='existing_buyer',
+			password='StrongPass123!',
+			first_name='Existing',
+			last_name='Buyer',
+			email='buyer@example.com',
+			role='buyer',
+		)
+
+		self.client.force_login(buyer_user)
+		response = self.client.get(reverse('seller_home'))
+
+		self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
 	def test_logout_view_clears_session_and_redirects_home(self):
 		buyer_user = User.objects.create_user(
 			username='logout_buyer',
@@ -186,11 +226,16 @@ class AuthenticationFlowTests(TestCase):
 
 	# SQL injection test
 	def test_sql_injection_login(self):
+		response = self.client.post(
+			reverse('account_token_api'),
+			{
+				'username': "' OR 1=1 --",
+				'password': 'anything',
+			},
+			format='json',
+		)
 
-		response = self.client.post('/login/', {
-			'username': "' OR 1=1 --",
-			'password': 'anything'
-		})
+		self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 		self.assertNotIn('_auth_user_id', self.client.session)
 
 	def test_invalid_login_rejected(self):
