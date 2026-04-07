@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Product Requests</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            margin: 0;
+            background: #f4f6f8;
+        }
+
+        header {
+            background: #2c3e50;
+            color: white;
+            padding: 15px 30px;
+        }
+
+        nav {
+            background: #34495e;
+            padding: 10px 30px;
+        }
+
+            nav a {
+                color: white;
+                text-decoration: none;
+                margin-right: 20px;
+                font-weight: bold;
+            }
+
+                nav a:hover {
+                    text-decoration: underline;
+                }
+
+        .container {
+            padding: 30px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: center;
+        }
+
+        th {
+            background: #3498db;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background: #f2f2f2;
+        }
+
+        .approve-btn {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 3px 10px;
+            margin-right: 5px;
+        }
+
+        .reject-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 3px 10px;
+        }
+
+        .approve-label {
+            color: rgb(0, 221, 0);
+            font-weight: bold;
+        }
+
+        .rejected-label {
+            color: red;
+            font-weight: bold;
+        }
+        footer {
+            background-color: #2c3e50;
+            color: white;
+            text-align: center;
+            padding: 15px;
+            margin-top: 40px;
+        }
+    </style>
+</head>
+
+<body>
+    <header><h1>Product Approval Requests</h1></header>
+
+    <nav>
+        <a href="{% url 'admin_home' %}">Home</a>
+        <a href="{% url 'product_requests' %}">Product Requests</a>
+        <a href="{% url 'seller_requests' %}">Seller Account Requests</a>
+        <a href="admin_user_activity.html">User Activity</a>
+        <a href="{% url 'account_logout' %}">Logout</a>
+    </nav>
+
+    <div class="container">
+
+        <table>
+            <tr>
+                
+                <th>Request Type</th>
+                <th>Product Name</th>
+                <th>Original Product</th>
+                <th>Seller ID</th>
+                <th>Seller First Name</th>
+                <th>Category</th>
+                <th>Price</th>
+                <th>Stock</th>
+                <th>Approval Status</th>
+                <th>Original Soft Deleted</th>
+                <th>Redirect Target</th>
+                <th>Response</th>
+            </tr>
+            {% for approval_request in product_requests %}
+            <tr>
+                
+                <td>{{ approval_request.get_request_type_display }}</td>
+                <td>{{ approval_request.name }}</td>
+                <td>
+                    {% if approval_request.original_product_id %}
+                        #P{{ approval_request.original_product_id.id }} - {{ approval_request.original_product_id.product_name }}
+                    {% else %}
+                        New Product
+                    {% endif %}
+                </td>
+                <td>{{ approval_request.seller_ID.id }}</td>
+                <td>{{ approval_request.seller_First_Name }}</td>
+                <td>{{ approval_request.product_id.category }}</td>
+                <td>${{ approval_request.product_id.price }}</td>
+                <td>{{ approval_request.product_id.stock }}</td>
+                <td>{{ approval_request.status }}</td>
+                <td>
+                    {% if approval_request.original_product_id and approval_request.original_product_id.deleted_at %}
+                        Yes
+                    {% else %}
+                        No
+                    {% endif %}
+                </td>
+                <td>
+                    {% if approval_request.original_product_id and approval_request.original_product_id.redirect_to %}
+                        #P{{ approval_request.original_product_id.redirect_to.id }} - {{ approval_request.original_product_id.redirect_to.product_name }}
+                    {% else %}
+                        None
+                    {% endif %}
+                </td>
+                <td>
+                    {% if approval_request.approved == None %}
+                        <a href="{% url 'approve_product' approval_request.id %}" class="approve-btn">Approve</a>
+
+                        <a href="{% url 'reject_product' approval_request.id %}" class="reject-btn">Reject</a>
+
+                    {% elif approval_request.approved == True %}
+                        <span class="approved-label">Approved</span>
+
+                    {% else %}
+                        <span class="rejected-label">Rejected</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="13">No product approval requests found.</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <footer>
+        &copy; 2026 ThreadSwitch
+    </footer>
+
+</body>
+</html>

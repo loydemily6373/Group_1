@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Checkout</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            margin: 0;
+            background: #f4f6f8;
+        }
+
+        header {
+            background: #2c3e50;
+            color: white;
+            padding: 15px 30px;
+        }
+
+        nav {
+            background: #34495e;
+            padding: 10px 30px;
+        }
+
+            nav a {
+                color: white;
+                text-decoration: none;
+                margin-right: 20px;
+                font-weight: bold;
+            }
+
+                nav a:hover {
+                    text-decoration: underline;
+                }
+
+        .container {
+            padding: 30px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: center;
+        }
+
+        th {
+            background: #3498db;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background: #f2f2f2;
+        }
+
+        .checkout-btn {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            margin-top: 20px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .panel {
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .field {
+            margin-bottom: 15px;
+        }
+
+        .field label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: bold;
+        }
+
+        .field input, .field select {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+
+        .errorlist {
+            color: #c0392b;
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .hidden-section {
+            display: none;
+        }
+
+        .helper-text {
+            color: #555;
+            margin-top: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <header><h1>Checkout</h1></header>
+
+    <nav>
+        <a href="{% url 'buyer_home' %}">Home</a>
+        <a href="{% url 'buyer_order_history' %}">Order History</a>
+        <a href="{% url 'cart_view' %}">Cart</a>
+        <a href="{% url 'account_logout' %}">Logout</a>
+    </nav>
+
+    <div class="container">
+        {% if messages %}
+            {% for message in messages %}
+                <p>{{ message }}</p>
+            {% endfor %}
+        {% endif %}
+
+        {% if missing_seller_addresses %}
+            <div class="panel">
+                <h3>Seller Addresses Missing</h3>
+                <p>The following sellers do not have a saved shipping origin yet, so checkout is blocked for their items:</p>
+                <ul>
+                    {% for seller in missing_seller_addresses %}
+                    <li>{{ seller.username }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+
+        <h2> Order Summary</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Price</th>
+                    <th>Quantity</th>
+                    <th>Seller</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in cart_items %}
+                <tr>
+                    <td>{{ item.product.product_name }}</td>
+                    <td>${{ item.product.price }}</td>
+                    <td>{{ item.quantity }}</td>
+                    <td>{{ item.seller.username }}</td>
+                    <td>${{ item.item_total }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+
+        </table>
+
+        <div class="panel">
+            <h3>Seller Shipping Addresses</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Seller</th>
+                        <th>Ship From</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for summary in seller_summaries %}
+                    <tr>
+                        <td>{{ summary.seller.username }}</td>
+                        <td>
+                            {% if summary.shipping_address %}
+                                {{ summary.shipping_address.recipient_name }}<br>
+                                {{ summary.shipping_address.address_line_1 }}{% if summary.shipping_address.address_line_2 %}, {{ summary.shipping_address.address_line_2 }}{% endif %}<br>
+                                {{ summary.shipping_address.city }}, {{ summary.shipping_address.state }} {{ summary.shipping_address.postal_code }}<br>
+                                {{ summary.shipping_address.country }}
+                            {% else %}
+                                Missing seller address
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <h4> Subtotal: ${{ subtotal }}</h4>
+        <h4> Shipping: ${{ shipping_cost }}</h4>
+        <h4> Tax: ${{ tax_amount }}</h4>
+        <h3> Grand Total: ${{ grand_total }}</h3>
+
+        <form method="post" class="panel">
+            {% csrf_token %}
+
+            <h3>Buyer Shipping Address</h3>
+            {% if buyer_addresses %}
+                <div class="field">
+                    <label for="buyer_address_id">Use Saved Address</label>
+                    <select name="buyer_address_id" id="buyer_address_id">
+                        <option value="">Create a new address below</option>
+                        {% for address in buyer_addresses %}
+                        <option value="{{ address.id }}">
+                            {{ address.label }} - {{ address.address_line_1 }}, {{ address.city }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            {% endif %}
+
+            <div id="new-address-fields">
+                <p class="helper-text">Leave the saved address selector empty if you want to enter a new address for this order.</p>
+                {% for field in buyer_address_form %}
+                    <div class="field address-form-field">
+                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {{ field.errors }}
+                    </div>
+                {% endfor %}
+            </div>
+
+            <h3>Payment Method</h3>
+            {% if payment_methods %}
+                <div class="field">
+                    <label for="payment_method_id">Use Saved Payment Method</label>
+                    <select name="payment_method_id" id="payment_method_id">
+                        <option value="">Create a new payment method below</option>
+                        {% for method in payment_methods %}
+                        <option value="{{ method.id }}">
+                            {{ method.label }} - {{ method.get_card_brand_display }} ending in {{ method.last_four }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            {% endif %}
+
+            <div id="new-payment-fields">
+                <p class="helper-text">Leave the saved payment selector empty if you want to enter a new card.</p>
+                {% for field in payment_method_form %}
+                    <div class="field payment-form-field">
+                        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                        {{ field }}
+                        {{ field.errors }}
+                    </div>
+                {% endfor %}
+            </div>
+
+            <button type="submit" class="checkout-btn" {% if missing_seller_addresses %}disabled{% endif %}>Place Order</button>
+        </form>
+    </div>
+
+    <script>
+        const savedAddressSelect = document.getElementById('buyer_address_id');
+        const savedPaymentSelect = document.getElementById('payment_method_id');
+        const newAddressFields = document.getElementById('new-address-fields');
+        const newPaymentFields = document.getElementById('new-payment-fields');
+
+        function toggleFieldSection(selectElement, containerElement) {
+            if (!selectElement || !containerElement) {
+                return;
+            }
+
+            const isUsingSavedValue = selectElement.value !== '';
+            containerElement.classList.toggle('hidden-section', isUsingSavedValue);
+
+            containerElement.querySelectorAll('input, select, textarea').forEach((field) => {
+                if (isUsingSavedValue) {
+                    field.dataset.wasRequired = field.required ? 'true' : 'false';
+                    field.required = false;
+                    field.disabled = true;
+                } else {
+                    field.required = field.dataset.wasRequired === 'true';
+                    field.disabled = false;
+                }
+            });
+        }
+
+        toggleFieldSection(savedAddressSelect, newAddressFields);
+        toggleFieldSection(savedPaymentSelect, newPaymentFields);
+
+        if (savedAddressSelect) {
+            savedAddressSelect.addEventListener('change', () => toggleFieldSection(savedAddressSelect, newAddressFields));
+        }
+        if (savedPaymentSelect) {
+            savedPaymentSelect.addEventListener('change', () => toggleFieldSection(savedPaymentSelect, newPaymentFields));
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Seller Account Requests</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background-color: #f4f6f8;
+        }
+
+        header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 15px 30px;
+        }
+
+        nav {
+            background-color: #34495e;
+            padding: 10px 30px;
+        }
+
+            nav a {
+                color: white;
+                text-decoration: none;
+                margin-right: 20px;
+                font-weight: bold;
+            }
+
+                nav a:hover {
+                    text-decoration: underline;
+                }
+
+        .container {
+            padding: 30px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #3498db;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        .approve-btn {
+            background-color: #27ae60;
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            margin-right: 5px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .reject-btn {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .approve-btn:hover {
+            opacity: 0.9;
+        }
+
+        .reject-btn:hover {
+            opacity: 0.9;
+        }
+
+        footer {
+            background-color: #2c3e50;
+            color: white;
+            text-align: center;
+            padding: 15px;
+            margin-top: 40px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>Seller Account Requests</h1>
+    </header>
+
+    <nav>
+        <a href="admin.html">Home</a>
+        <a href="admin_product_request.html">Product Requests</a>
+        <a href="admin_seller_request.html">Seller Account Requests</a>
+        <a href="admin_user_activity.html">User Activity</a>
+        <a href="Index.html">Logout</a>
+    </nav>
+
+    <div class="container">
+
+        <table>
+            <tr>
+                <th>First Name</th>
+                <th>Last Name</th>
+                <th>Email</th>
+                <th>Response</th>
+            </tr>
+
+            <tr>
+                <td>Alice</td>
+                <td>Foster</td>
+                <td>alicef@gmail.com</td>
+                <td>
+                    <button class="approve-btn">Approve</button>
+                    <button class="reject-btn">Reject</button>
+                </td>
+            </tr>
+
+            <tr>
+                <td>Bob</td>
+                <td>Long</td>
+                <td>BL98@gmail.com</td>
+                <td>
+                    <button class="approve-btn">Approve</button>
+                    <button class="reject-btn">Reject</button>
+                </td>
+            </tr>
+
+            <tr>
+                <td>Charlie</td>
+                <td>Star</td>
+                <td>CharS@gmail.com</td>
+                <td>
+                    <button class="approve-btn">Approve</button>
+                    <button class="reject-btn">Reject</button>
+                </td>
+            </tr>
+
+        </table>
+
+    </div>
+
+    <footer>
+        � 2026 E-Commerce Platform
+    </footer>
+
+</body>
+</html>

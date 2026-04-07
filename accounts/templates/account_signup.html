@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Sign Up</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            margin: 0;
+            background: #f4f6f8;
+        }
+
+        header {
+            background: #2c3e50;
+            color: white;
+            padding: 15px 30px;
+        }
+
+        .container {
+            padding: 40px;
+            max-width: 500px;
+            margin: auto;
+            background: white;
+            margin-top: 40px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        input, select {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 15px;
+        }
+
+        .account-note {
+            font-size: 14px;
+            color: #555;
+            margin-top: -5px;
+            margin-bottom: 15px;
+        }
+
+        .seller-address-section {
+            border: 1px solid #d7dde4;
+            background: #f8fafc;
+            padding: 16px;
+            margin-bottom: 15px;
+        }
+
+        .seller-address-section.hidden {
+            display: none;
+        }
+
+        .seller-address-section h3 {
+            margin-top: 0;
+            margin-bottom: 12px;
+        }
+
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px;
+            width: 100%;
+        }
+
+        .form-message {
+            display: none;
+            padding: 12px 14px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .form-message.is-visible {
+            display: block;
+        }
+
+        .form-message.is-success {
+            background: #e8f8ef;
+            color: #1f6f43;
+            border: 1px solid #b9e2ca;
+        }
+
+        .form-message.is-error {
+            background: #fdecec;
+            color: #9d1c1c;
+            border: 1px solid #f2c0c0;
+        }
+    </style>
+</head>
+
+<body>
+    <header><h1>Create Account</h1></header>
+
+    <div class="container">
+        <form id="signupForm">
+            <div id="formMessage" class="form-message" role="status" aria-live="polite"></div>
+            <label>First Name</label>
+            <input type="text" id="firstName" required>
+
+            <label>Last Name</label>
+            <input type="text" id="lastName" required>
+
+            <label>Email</label>
+            <input type="email" id="email" required>
+
+            <label>Username</label>
+            <input type="text" id="username" required>
+
+            <label>Password</label>
+            <input type="password" id="password" required>
+            <p class="account-note">Password must be at least 8 characters long and include one capital letter and one number.</p>
+
+            <label>Account Type</label>
+            <select id="role">
+                <option value="buyer">Buyer</option>
+                <option value="seller">Seller</option>
+            </select>
+            <p id="role-note" class="account-note">Buyer accounts can log in immediately after signup.</p>
+
+            <div id="seller-address-section" class="seller-address-section hidden">
+                <h3>Seller Shipping Address</h3>
+                <p class="account-note">This ship-from address is required for seller checkout and will be saved to your account.</p>
+
+                <label>Address Label</label>
+                <input type="text" id="sellerAddressLabel">
+
+                <label>Recipient Name</label>
+                <input type="text" id="sellerRecipientName">
+
+                <label>Address Line 1</label>
+                <input type="text" id="sellerAddressLine1">
+
+                <label>Address Line 2</label>
+                <input type="text" id="sellerAddressLine2">
+
+                <label>City</label>
+                <input type="text" id="sellerCity">
+
+                <label>State / County</label>
+                <input type="text" id="sellerState">
+
+                <label>Postal Code</label>
+                <input type="text" id="sellerPostalCode">
+
+                <label>Country</label>
+                <input type="text" id="sellerCountry">
+
+                <label>Phone Number</label>
+                <input type="text" id="sellerPhoneNumber">
+            </div>
+
+            <button type="submit">Create Account</button>
+        </form>
+        <p><a href="{% url 'login' %}">Back to login</a></p>
+    </div>
+
+<script>
+const roleSelect = document.getElementById("role");
+const roleNote = document.getElementById("role-note");
+const sellerAddressSection = document.getElementById("seller-address-section");
+const formMessage = document.getElementById("formMessage");
+const sellerAddressFields = [
+    document.getElementById("sellerAddressLabel"),
+    document.getElementById("sellerRecipientName"),
+    document.getElementById("sellerAddressLine1"),
+    document.getElementById("sellerCity"),
+    document.getElementById("sellerState"),
+    document.getElementById("sellerPostalCode"),
+    document.getElementById("sellerCountry")
+];
+
+function showFormMessage(message, type) {
+    formMessage.textContent = message;
+    formMessage.className = `form-message is-visible is-${type}`;
+}
+
+
+function updateRoleNote() {
+    if (roleSelect.value === "seller") {
+        roleNote.textContent = "Seller accounts are created immediately, but an admin must approve them before you can log in.";
+        sellerAddressSection.classList.remove("hidden");
+        sellerAddressFields.forEach((field) => {
+            field.required = true;
+        });
+    } else {
+        roleNote.textContent = "Buyer accounts can log in immediately after signup.";
+        sellerAddressSection.classList.add("hidden");
+        sellerAddressFields.forEach((field) => {
+            field.required = false;
+        });
+    }
+}
+
+updateRoleNote();
+roleSelect.addEventListener("change", updateRoleNote);
+
+
+document.getElementById("signupForm").addEventListener("submit", async function(e) {
+    e.preventDefault();
+
+    const firstName = document.getElementById("firstName").value;
+    const lastName = document.getElementById("lastName").value;
+    const email = document.getElementById("email").value;
+    const username = document.getElementById("username").value;
+    const password = document.getElementById("password").value;
+    const role = document.getElementById("role").value;
+    const payload = {
+        first_name: firstName,
+        last_name: lastName,
+        email: email,
+        username: username,
+        password: password,
+        role: role
+    };
+
+    if (role === "seller") {
+        payload.seller_address_label = document.getElementById("sellerAddressLabel").value;
+        payload.seller_recipient_name = document.getElementById("sellerRecipientName").value;
+        payload.seller_address_line_1 = document.getElementById("sellerAddressLine1").value;
+        payload.seller_address_line_2 = document.getElementById("sellerAddressLine2").value;
+        payload.seller_city = document.getElementById("sellerCity").value;
+        payload.seller_state = document.getElementById("sellerState").value;
+        payload.seller_postal_code = document.getElementById("sellerPostalCode").value;
+        payload.seller_country = document.getElementById("sellerCountry").value;
+        payload.seller_phone_number = document.getElementById("sellerPhoneNumber").value;
+    }
+
+    try {
+        const response = await fetch("{% url 'account_register_api' %}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+        console.log(data);
+
+        if (response.ok) {
+            if (role === "seller") {
+                showFormMessage("Seller account created successfully. An admin must approve your account before you can log in.", "success");
+            } else {
+                showFormMessage("Account created successfully! Redirecting...", "success");
+            }
+
+            window.setTimeout(() => {
+                window.location.href = "{% url 'login' %}";
+            }, 1000);
+        } else {
+            const errorText = Object.entries(data)
+                .map(([field, messages]) => `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`)
+                .join(' ');
+            showFormMessage(errorText || "Something went wrong", "error");
+        }
+
+    } catch (error) {
+        console.error(error);
+        showFormMessage("Something went wrong", "error");
+    }
+});
+</script>
+
+</body>
+</html>
