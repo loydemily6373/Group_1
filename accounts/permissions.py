@@ -1,8 +1,15 @@
 from functools import wraps
 
 from django.contrib.auth.decorators import login_required
-from django.core.exceptions import PermissionDenied
+from django.shortcuts import redirect
 from rest_framework.permissions import BasePermission
+
+
+ROLE_HOME_REDIRECTS = {
+    'buyer': 'buyer_home',
+    'seller': 'seller_home',
+    'admin': 'admin_home',
+}
 
 
 def role_required(*allowed_roles):
@@ -11,9 +18,10 @@ def role_required(*allowed_roles):
         @login_required(login_url='login')
         @wraps(view_func)
         def _wrapped_view(request, *args, **kwargs):
-            
-            if getattr(request.user, 'role', None) not in allowed_roles:
-                raise PermissionDenied("You do not have permission to view this page.")
+            user_role = getattr(request.user, 'role', None)
+            if user_role not in allowed_roles:
+                redirect_route = ROLE_HOME_REDIRECTS.get(user_role, 'index')
+                return redirect(redirect_route)
             return view_func(request, *args, **kwargs)
 
         return _wrapped_view

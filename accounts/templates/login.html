@@ -80,6 +80,21 @@ header {
     font-size: 14px;
 }
 
+.PasswordToggleRow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: -10px;
+    margin-bottom: 20px;
+    color: #555;
+    font-size: 14px;
+}
+
+.PasswordToggleRow input {
+    width: auto;
+    margin: 0;
+}
+
 .LoginButton {
     width: 100%;
     padding: 12px;
@@ -94,6 +109,30 @@ header {
 
 .LoginButton:hover {
     background-color: #1f2d3a;
+}
+
+.FormMessage {
+    display: none;
+    margin-bottom: 20px;
+    padding: 12px 14px;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.FormMessage.is-visible {
+    display: block;
+}
+
+.FormMessage.is-success {
+    background-color: #e8f8ef;
+    color: #1f6f43;
+    border: 1px solid #b9e2ca;
+}
+
+.FormMessage.is-error {
+    background-color: #fdecec;
+    color: #9d1c1c;
+    border: 1px solid #f2c0c0;
 }
 
 .LoginFooterText {
@@ -127,11 +166,16 @@ footer {
         <h1>Log In</h1>
         <form id="loginForm">
             {% csrf_token %}
+            <div id="formMessage" class="FormMessage" role="status" aria-live="polite"></div>
             <label for="username">Username</label>
             <input type="text" id="username" placeholder="Enter your username" required>
 
             <label for="password">Password</label>
             <input type="password" id="password" placeholder="Enter your password" required>
+            <label class="PasswordToggleRow" for="showPassword">
+                <input type="checkbox" id="showPassword">
+                Show password
+            </label>
 
             <button type="submit" class="LoginButton">Log In</button>
         </form>
@@ -151,6 +195,17 @@ const redirectByRole = {
     seller: "{% url 'seller_home' %}",
     admin: "{% url 'admin_home' %}"
 };
+
+const formMessage = document.getElementById("formMessage");
+
+function showFormMessage(message, type) {
+    formMessage.textContent = message;
+    formMessage.className = `FormMessage is-visible is-${type}`;
+}
+
+document.getElementById("showPassword").addEventListener("change", function(e) {
+    document.getElementById("password").type = e.target.checked ? "text" : "password";
+});
 
 
 document.getElementById("loginForm").addEventListener("submit", async function(e) {
@@ -175,22 +230,21 @@ document.getElementById("loginForm").addEventListener("submit", async function(e
         console.log(data);
 
         if (data.access) {
-            
             localStorage.setItem("token", data.access);
             localStorage.setItem("refresh", data.refresh);
             localStorage.setItem("role", data.role);
 
-            
-            alert("Login successful!");
-
-            window.location.href = redirectByRole[data.role] || "{% url 'index' %}";
+            showFormMessage("Login successful! Redirecting...", "success");
+            window.setTimeout(() => {
+                window.location.href = redirectByRole[data.role] || "{% url 'index' %}";
+            }, 800);
         } else {
-            alert("Login failed: " + (data.detail || "Invalid credentials"));
+            showFormMessage("Login failed: " + (data.detail || "Invalid credentials"), "error");
         }
 
     } catch (error) {
         console.error(error);
-        alert("Something went wrong");
+        showFormMessage("Something went wrong", "error");
     }
 });
 </script>

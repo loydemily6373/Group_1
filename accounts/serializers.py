@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+import re
 
 from admin.models import SellerApprovalRequest
 from buyers.models import SellerShippingAddress
@@ -44,6 +45,18 @@ class RegisterSerializer(serializers.ModelSerializer):
         ]
 
     def validate(self, attrs):
+        password = attrs.get('password', '')
+        password_errors = []
+
+        if len(password) < 8:
+            password_errors.append('Password must be at least 8 characters long.')
+        if not re.search(r'[A-Z]', password):
+            password_errors.append('Password must contain at least one capital letter.')
+        if not re.search(r'\d', password):
+            password_errors.append('Password must contain at least one number.')
+        if password_errors:
+            raise serializers.ValidationError({'password': password_errors})
+
         if attrs.get('role') != 'seller':
             return attrs
 

@@ -18,6 +18,20 @@ class AuthenticationFlowTests(TestCase):
 		response = self.client.get(reverse('signup'))
 		self.assertEqual(response.status_code, status.HTTP_200_OK)
 
+	def test_index_login_link_opens_login_page_with_form(self):
+		index_response = self.client.get(reverse('index'))
+
+		self.assertEqual(index_response.status_code, status.HTTP_200_OK)
+		self.assertContains(index_response, 'href="%s"' % reverse('login'))
+		self.assertContains(index_response, 'Log In')
+
+		login_response = self.client.get(reverse('login'))
+
+		self.assertEqual(login_response.status_code, status.HTTP_200_OK)
+		self.assertContains(login_response, '<form id="loginForm">', html=False)
+		self.assertContains(login_response, 'id="username"', html=False)
+		self.assertContains(login_response, 'id="password"', html=False)
+
 	def test_register_api_creates_buyer_account(self):
 		# A normal buyer signup should succeed and persist the extra profile fields.
 		payload = {
@@ -61,6 +75,22 @@ class AuthenticationFlowTests(TestCase):
 		self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 		self.assertIn('username', response.data)
 		self.assertEqual(User.objects.filter(username='buyer_user').count(), 1)
+
+	def test_register_api_rejects_weak_password(self):
+		payload = {
+			'username': 'weak_password_user',
+			'password': 'weakpass',
+			'first_name': 'Weak',
+			'last_name': 'Password',
+			'email': 'weak@example.com',
+			'role': 'buyer',
+		}
+
+		response = self.client.post(reverse('account_register_api'), payload, format='json')
+
+		self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+		self.assertIn('password', response.data)
+		self.assertFalse(User.objects.filter(username='weak_password_user').exists())
 
 	def test_register_api_creates_inactive_seller_and_request(self):
 		# Seller signups should create the user account but hold login access until admin approval.
@@ -189,7 +219,7 @@ class AuthenticationFlowTests(TestCase):
 		self.client.force_login(seller_user)
 		response = self.client.get(reverse('buyer_home'))
 
-		self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+		self.assertRedirects(response, reverse('seller_home'))
 
 	def test_wrong_role_cannot_open_seller_page(self):
 		# Logged-in buyers should be blocked from seller-only pages.
@@ -205,7 +235,23 @@ class AuthenticationFlowTests(TestCase):
 		self.client.force_login(buyer_user)
 		response = self.client.get(reverse('seller_home'))
 
-		self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+		self.assertRedirects(response, reverse('buyer_home'))
+
+	def test_wrong_role_cannot_open_admin_page(self):
+		# Logged-in non-admin users should be blocked from admin-only pages.
+		buyer_user = User.objects.create_user(
+			username='buyer_for_admin_check',
+			password='StrongPass123!',
+			first_name='Buyer',
+			last_name='User',
+			email='buyer-admin-check@example.com',
+			role='buyer',
+		)
+
+		self.client.force_login(buyer_user)
+		response = self.client.get(reverse('admin_home'))
+
+		self.assertRedirects(response, reverse('buyer_home'))
 
 	def test_logout_view_clears_session_and_redirects_home(self):
 		buyer_user = User.objects.create_user(

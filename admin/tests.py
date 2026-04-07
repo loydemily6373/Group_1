@@ -81,7 +81,7 @@ class AdminIntegrationTests(TestCase):
 
         response = self.client.get(reverse('product_requests'))
 
-        self.assertEqual(response.status_code, 403)
+        self.assertRedirects(response, reverse('buyer_home'))
 
     def test_approve_product_updates_real_product_record(self):
         # Approving from the admin app should update the shared Product model used elsewhere.
