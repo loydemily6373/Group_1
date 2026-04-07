@@ -595,6 +595,93 @@ class ProductWorkflowTests(TestCase):
         self.assertEqual(return_request.status, 'pending')
         self.assertEqual(return_request.reason, 'Item did not fit.')
 
+    def test_request_return_page_displays_form_for_completed_order_item(self):
+        buyer = User.objects.create_user(
+            username='buyer_return_form',
+            password='StrongPass123!',
+            first_name='Buyer',
+            last_name='ReturnForm',
+            email='buyerreturnform@example.com',
+            role='buyer',
+        )
+        buyer_address = BuyerShippingAddress.objects.create(
+            buyer=buyer,
+            label='Home',
+            recipient_name='Buyer Return Form',
+            address_line_1='15 Buyer Street',
+            city='Dublin',
+            state='Leinster',
+            postal_code='D15RET',
+            country='Ireland',
+            is_default=True,
+        )
+        payment_method = PaymentMethod.objects.create(
+            buyer=buyer,
+            label='Card',
+            cardholder_name='Buyer Return Form',
+            card_brand='visa',
+            full_card_number='4666666666666666',
+            last_four='6666',
+            expiry_month=12,
+            expiry_year=2030,
+            is_default=True,
+        )
+        seller_address = SellerShippingAddress.objects.create(
+            seller=self.seller,
+            label='Warehouse',
+            recipient_name='Seller One',
+            address_line_1='123 Warehouse Road',
+            city='Dublin',
+            state='Leinster',
+            postal_code='D01SELL',
+            country='Ireland',
+            is_default=True,
+        )
+        order = Order.objects.create(
+            buyer=buyer,
+            buyer_shipping_address=buyer_address,
+            payment_method=payment_method,
+            order_number='ORD-RETURN-FORM',
+            subtotal='45.00',
+            shipping_cost='6.99',
+            tax_amount='3.15',
+            grand_total='55.14',
+            status='completed',
+        )
+        product = Product.objects.create(
+            seller_id=self.seller,
+            product_name='Return Form Hoodie',
+            category='Hoodie',
+            price='45.00',
+            stock=5,
+            description='Return form hoodie',
+            active=True,
+            status='approved',
+            redirect_to=None,
+            deleted_at=None,
+        )
+        order_item = OrderItem.objects.create(
+            order=order,
+            product=product,
+            seller=self.seller,
+            seller_shipping_address=seller_address,
+            product_name='Return Form Hoodie',
+            item_status='completed',
+            unit_price='45.00',
+            quantity=1,
+            line_total='45.00',
+        )
+
+        self.client.force_login(buyer)
+        response = self.client.get(reverse('request_return', args=[order_item.id]))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Request Return')
+        self.assertContains(response, 'Order #ORD-RETURN-FORM')
+        self.assertContains(response, 'Return Form Hoodie')
+        self.assertContains(response, 'name="reason"', html=False)
+        self.assertContains(response, 'Submit Request')
+
     def test_buyer_and_seller_can_view_pending_return_requests(self):
         buyer = User.objects.create_user(
             username='buyer_pending_return',

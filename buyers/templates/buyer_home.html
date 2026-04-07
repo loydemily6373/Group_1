@@ -71,6 +71,54 @@
             color: #4b5563;
         }
 
+        .search-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .message-list {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 20px;
+        }
+
+        .message-list li {
+            padding: 12px 14px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .message-list .error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .compare-button {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            background: #111827;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .compare-select {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.95rem;
+            color: #334155;
+            margin-top: 8px;
+        }
+
+        .compare-select input {
+            margin: 0;
+        }
+
         .product-list {
             display: flex;
             flex-wrap: wrap;
@@ -290,6 +338,14 @@
     </nav>
 
     <div class="container">
+        {% if messages %}
+            <ul class="message-list">
+                {% for message in messages %}
+                    <li class="{{ message.tags|default:'info' }}">{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
         <div class="search-box">
             <h2>Search Products</h2>
             <form method="get">
@@ -300,10 +356,13 @@
                         <option value="{{ category }}" {% if selected_category == category %}selected{% endif %}>{{ category }}</option>
                     {% endfor %}
                 </select>
-                <button type="submit">Search</button>
-                {% if search_query or selected_category %}
-                    <a href="{% url 'buyer_home' %}">Clear Filters</a>
-                {% endif %}
+                <div class="search-actions">
+                    <button type="submit">Search</button>
+                    <button type="submit" class="compare-button" form="compare-products-form">Compare Selected Products</button>
+                    {% if search_query or selected_category %}
+                        <a href="{% url 'buyer_home' %}">Clear Filters</a>
+                    {% endif %}
+                </div>
             </form>
             {% if search_query or selected_category %}
                 <p class="filter-summary">
@@ -314,55 +373,71 @@
             {% endif %}
         </div>
 
-        <div class="product-list">
-            {% for product in products %}
-                <div class="product-card">
-                    {% if product.image %}
-                        <img class="product-image" src="{{ product.image.url }}" alt="{{ product.product_name }}">
-                    {% else %}
-                        <div class="product-image-placeholder">No Image Available</div>
-                    {% endif %}
-                    <h3>{{ product.product_name }}</h3>
-                    <p>Category: {{ product.category }}</p>
-                    <p>Price: ${{ product.price }}</p>
-                    <p class="product-description">{{ product.description|truncatechars:90 }}</p>
-                    <div class="product-actions">
-                        <button type="button" class="view-details-btn" data-modal-target="product-modal-{{ product.id }}">View Details</button>
-                        <a class="add-to-cart-btn" href="{% url 'add_to_cart' product.id %}">Add to Cart</a>
-                    </div>
-                </div>
-
-                <div class="modal-overlay" id="product-modal-{{ product.id }}" aria-hidden="true">
-                    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="product-modal-title-{{ product.id }}">
-                        <div class="modal-header">
-                            <h2 id="product-modal-title-{{ product.id }}">{{ product.product_name }}</h2>
-                            <button type="button" class="modal-close" data-modal-close aria-label="Close product details">&times;</button>
+        <form id="compare-products-form" method="get" action="{% url 'compare_products' %}">
+            {% if search_query %}
+                <input type="hidden" name="q" value="{{ search_query }}">
+            {% endif %}
+            {% if selected_category %}
+                <input type="hidden" name="category" value="{{ selected_category }}">
+            {% endif %}
+            {% if current_page %}
+                <input type="hidden" name="page" value="{{ current_page }}">
+            {% endif %}
+            <div class="product-list">
+                {% for product in products %}
+                    <div class="product-card">
+                        {% if product.image %}
+                            <img class="product-image" src="{{ product.image.url }}" alt="{{ product.product_name }}">
+                        {% else %}
+                            <div class="product-image-placeholder">No Image Available</div>
+                        {% endif %}
+                        <h3>{{ product.product_name }}</h3>
+                        <p>Category: {{ product.category }}</p>
+                        <p>Price: ${{ product.price }}</p>
+                        <p class="product-description">{{ product.description|truncatechars:90 }}</p>
+                        <label class="compare-select">
+                            <input type="checkbox" name="product_ids" value="{{ product.id }}">
+                            Select to compare
+                        </label>
+                        <div class="product-actions">
+                            <button type="button" class="view-details-btn" data-modal-target="product-modal-{{ product.id }}">View Details</button>
+                            <a class="add-to-cart-btn" href="{% url 'add_to_cart' product.id %}">Add to Cart</a>
                         </div>
-                        <div class="modal-content">
-                            <div>
-                                {% if product.image %}
-                                    <img class="modal-image" src="{{ product.image.url }}" alt="{{ product.product_name }}">
-                                {% else %}
-                                    <div class="modal-image-placeholder">No Image Available</div>
-                                {% endif %}
+                    </div>
+
+                    <div class="modal-overlay" id="product-modal-{{ product.id }}" aria-hidden="true">
+                        <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="product-modal-title-{{ product.id }}">
+                            <div class="modal-header">
+                                <h2 id="product-modal-title-{{ product.id }}">{{ product.product_name }}</h2>
+                                <button type="button" class="modal-close" data-modal-close aria-label="Close product details">&times;</button>
                             </div>
-                            <div class="modal-details">
-                                <p><strong>Name:</strong> {{ product.product_name }}</p>
-                                <p><strong>Description:</strong> {{ product.description }}</p>
-                                <p><strong>Price:</strong> ${{ product.price }}</p>
-                                <p><strong>Category:</strong> {{ product.category }}</p>
-                                <p><strong>Stock:</strong> {{ product.stock }}</p>
-                                <div class="product-actions">
-                                    <a class="add-to-cart-btn" href="{% url 'add_to_cart' product.id %}">Add to Cart</a>
+                            <div class="modal-content">
+                                <div>
+                                    {% if product.image %}
+                                        <img class="modal-image" src="{{ product.image.url }}" alt="{{ product.product_name }}">
+                                    {% else %}
+                                        <div class="modal-image-placeholder">No Image Available</div>
+                                    {% endif %}
+                                </div>
+                                <div class="modal-details">
+                                    <p><strong>Name:</strong> {{ product.product_name }}</p>
+                                    <p><strong>Description:</strong> {{ product.description }}</p>
+                                    <p><strong>Price:</strong> ${{ product.price }}</p>
+                                    <p><strong>Category:</strong> {{ product.category }}</p>
+                                    <p><strong>Stock:</strong> {{ product.stock }}</p>
+                                    <div class="product-actions">
+                                        <a class="add-to-cart-btn" href="{% url 'add_to_cart' product.id %}">Add to Cart</a>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            {% empty %}
-                <p>No matching products found.</p>
-            {% endfor %}
-        </div>
+                {% empty %}
+                    <p>No matching products found.</p>
+                {% endfor %}
+            </div>
+
+        </form>
 
         {% if page_obj %}
             <div class="pagination">

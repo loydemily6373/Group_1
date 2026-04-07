@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Pending Return Requests</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background-color: #f4f6f8;
+        }
+
+        header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 15px 30px;
+        }
+
+        nav {
+            background-color: #34495e;
+            padding: 10px 30px;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            margin-right: 20px;
+            font-weight: bold;
+        }
+
+        .container {
+            padding: 30px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        th {
+            background: #3498db;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Pending Return Requests</h1>
+    </header>
+
+    <nav>
+        <a href="{% url 'buyer_home' %}">Home</a>
+        <a href="{% url 'buyer_order_history' %}">Order History</a>
+        <a href="{% url 'buyer_return_requests' %}">Pending Returns</a>
+        <a href="{% url 'cart_view' %}">Cart</a>
+        <a href="{% url 'account_logout' %}">Logout</a>
+    </nav>
+
+    <div class="container">
+        {% if messages %}
+            {% for message in messages %}
+                <p>{{ message }}</p>
+            {% endfor %}
+        {% endif %}
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Order</th>
+                    <th>Product</th>
+                    <th>Seller</th>
+                    <th>Reason</th>
+                    <th>Requested</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for return_request in pending_requests %}
+                    <tr>
+                        <td>{{ return_request.order_item.order.order_number }}</td>
+                        <td>{{ return_request.order_item.product_name }}</td>
+                        <td>{{ return_request.order_item.seller.username }}</td>
+                        <td>{{ return_request.reason }}</td>
+                        <td>{{ return_request.created_at }}</td>
+                        <td>{{ return_request.get_status_display }}</td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="6">You have no pending return requests.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

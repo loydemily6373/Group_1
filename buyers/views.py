@@ -1,11 +1,13 @@
 from decimal import Decimal
 import uuid
+from urllib.parse import urlencode
 
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import Q
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 from django.utils import timezone
 
 from admin.models import UserActivity
@@ -152,6 +154,22 @@ def _generate_order_number():
     return f"ORD-{timezone.now():%Y%m%d%H%M%S}-{uuid.uuid4().hex[:6].upper()}"
 
 
+def _build_buyer_catalogue_url(search_query='', selected_category='', page_number=''):
+    query_params = []
+
+    if search_query:
+        query_params.append(('q', search_query))
+    if selected_category:
+        query_params.append(('category', selected_category))
+    if page_number:
+        query_params.append(('page', page_number))
+
+    base_url = reverse('buyer_home')
+    if not query_params:
+        return base_url
+    return f"{base_url}?{urlencode(query_params)}"
+
+
 @role_required('buyer')
 def buyer_homepage(request):
     # Restrict buyer pages to logged-in buyers now that login also creates a session.
@@ -177,11 +195,51 @@ def buyer_homepage(request):
     context = {
         'products': page_obj.object_list,
         'page_obj': page_obj,
+        'current_page': page_obj.number,
         'search_query': search_query,
         'selected_category': selected_category,
         'category_choices': [choice[0] for choice in Product.CATEGORY_CHOICES],
     }
     return render(request, 'buyer_home.html',context)
+
+
+@role_required('buyer')
+def compare_products(request):
+    search_query = request.GET.get('q', '').strip()
+    selected_category = request.GET.get('category', '').strip()
+    page_number = request.GET.get('page', '').strip()
+    return_url = _build_buyer_catalogue_url(search_query, selected_category, page_number)
+
+    selected_product_ids = []
+    for product_id in request.GET.getlist('product_ids'):
+        if product_id not in selected_product_ids:
+            selected_product_ids.append(product_id)
+
+    if len(selected_product_ids) != 2:
+        messages.error(request, 'Select exactly two approved products to compare.')
+        return redirect(return_url)
+
+    compared_products = list(
+        Product.objects.filter(
+            id__in=selected_product_ids,
+            active=True,
+            status='approved',
+            deleted_at__isnull=True,
+        ).select_related('seller_id')
+    )
+
+    compared_products_by_id = {str(product.id): product for product in compared_products}
+    ordered_products = [
+        compared_products_by_id[product_id]
+        for product_id in selected_product_ids
+        if product_id in compared_products_by_id
+    ]
+
+    if len(ordered_products) != 2:
+        messages.error(request, 'One or more selected products are no longer available for comparison.')
+        return redirect(return_url)
+
+    return render(request, 'buyer_compare.html', {'products': ordered_products, 'return_url': return_url})
 
 
 @role_required('buyer')
