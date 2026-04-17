@@ -44,5 +44,4 @@ jobs:
       env:
         DATABASE_URL: postgres://testuser:testpass@localhost:5432/testdb
       run: |
-        # Skip makemigrations check for now due to migration conflicts
-        python manage.py test --verbosity=2
+        python manage.py test
