@@ -397,10 +397,14 @@ class BuyerHomepageTests(TestCase):
 			deleted_at=None,
 		)
 
+		# Set products in session for comparison
+		session = self.client.session
+		session['compare_selections'] = [str(first_product.id), str(second_product.id)]
+		session.save()
+
 		response = self.client.get(
 			reverse('compare_products'),
 			{
-				'product_ids': [first_product.id, second_product.id],
 				'q': 'Compare',
 				'category': 'Jacket',
 				'page': 2,
@@ -429,9 +433,14 @@ class BuyerHomepageTests(TestCase):
 			deleted_at=None,
 		)
 
+		# Set only one product in session for comparison
+		session = self.client.session
+		session['compare_selections'] = [str(first_product.id)]
+		session.save()
+
 		response = self.client.get(
 			reverse('compare_products'),
-			{'product_ids': [first_product.id], 'q': 'Single', 'category': 'Jacket', 'page': 3},
+			{'q': 'Single', 'category': 'Jacket', 'page': 3},
 			follow=True,
 		)
 
@@ -452,14 +461,14 @@ class BuyerHomepageTests(TestCase):
 			deleted_at=None,
 		)
 
-		response = self.client.get(reverse('buyer_home'), {'q': 'Filter', 'category': 'Jacket', 'page': 2})
+		response = self.client.get(reverse('buyer_home'), {'q': 'Filter', 'category': 'Jacket', 'page': 1})
 
 		self.assertEqual(response.status_code, 200)
-		self.assertContains(response, 'id="compare-products-form"', html=False)
-		self.assertContains(response, 'name="q" value="Filter"', html=False)
-		self.assertContains(response, 'name="category" value="Jacket"', html=False)
-		self.assertContains(response, 'name="page" value="1"', html=False)
-		self.assertContains(response, 'form="compare-products-form"', html=False)
+		# Check that the toggle form for product selection is present with filters preserved in the URL
+		self.assertContains(response, 'action="/buyer/compare/toggle/', html=False)
+		self.assertContains(response, 'q=Filter', html=False)
+		self.assertContains(response, 'category=Jacket', html=False)
+		self.assertContains(response, 'page=1', html=False)
 
 
 class CheckoutFlowTests(TestCase):

@@ -192,6 +192,11 @@ def buyer_homepage(request):
     paginator = Paginator(products, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
+    
+    # Get the currently selected products from session
+    selected_product_ids = request.session.get('compare_selections', [])
+    remaining_selections = max(0, 2 - len(selected_product_ids))
+    
     context = {
         'products': page_obj.object_list,
         'page_obj': page_obj,
@@ -199,8 +204,54 @@ def buyer_homepage(request):
         'search_query': search_query,
         'selected_category': selected_category,
         'category_choices': [choice[0] for choice in Product.CATEGORY_CHOICES],
+        'selected_product_ids': selected_product_ids,
+        'remaining_selections': remaining_selections,
     }
     return render(request, 'buyer_home.html',context)
+
+
+@role_required('buyer')
+def toggle_compare_selection(request, product_id):
+    """Add or remove a product from the compare selection (stored in session)."""
+    if 'compare_selections' not in request.session:
+        request.session['compare_selections'] = []
+    
+    compare_selections = request.session['compare_selections']
+    product_id_str = str(product_id)
+    
+    if product_id_str in compare_selections:
+        compare_selections.remove(product_id_str)
+    else:
+        if len(compare_selections) >= 2:
+            compare_selections.pop(0)  # Remove the oldest selection to keep only 2
+        compare_selections.append(product_id_str)
+    
+    request.session['compare_selections'] = compare_selections
+    request.session.modified = True
+    
+    # Reconstruct the return URL from the current request's GET parameters
+    search_query = request.GET.get('q', '').strip()
+    selected_category = request.GET.get('category', '').strip()
+    page_number = request.GET.get('page', '').strip()
+    return_url = _build_buyer_catalogue_url(search_query, selected_category, page_number)
+    return redirect(return_url)
+
+
+@role_required('buyer')
+def clear_compare_selections(request):
+    """Clear all compare selections from the session."""
+    if 'compare_selections' in request.session:
+        del request.session['compare_selections']
+        request.session.modified = True
+    
+    # Reconstruct the return URL from the current request's GET parameters
+    search_query = request.GET.get('q', '').strip()
+    selected_category = request.GET.get('category', '').strip()
+    page_number = request.GET.get('page', '').strip()
+    return_url = _build_buyer_catalogue_url(search_query, selected_category, page_number)
+    
+    messages.success(request, 'Comparison selections cleared.')
+    return redirect(return_url)
 
 
 @role_required('buyer')
@@ -210,10 +261,8 @@ def compare_products(request):
     page_number = request.GET.get('page', '').strip()
     return_url = _build_buyer_catalogue_url(search_query, selected_category, page_number)
 
-    selected_product_ids = []
-    for product_id in request.GET.getlist('product_ids'):
-        if product_id not in selected_product_ids:
-            selected_product_ids.append(product_id)
+    # Get product IDs from session
+    selected_product_ids = request.session.get('compare_selections', [])
 
     if len(selected_product_ids) != 2:
         messages.error(request, 'Select exactly two approved products to compare.')
@@ -238,6 +287,11 @@ def compare_products(request):
     if len(ordered_products) != 2:
         messages.error(request, 'One or more selected products are no longer available for comparison.')
         return redirect(return_url)
+
+    # Clear selections after comparison
+    if 'compare_selections' in request.session:
+        del request.session['compare_selections']
+        request.session.modified = True
 
     return render(request, 'buyer_compare.html', {'products': ordered_products, 'return_url': return_url})
 

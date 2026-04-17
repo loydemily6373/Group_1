@@ -144,6 +144,9 @@
 
         <div class="compare-actions">
             <a href="{{ return_url }}">Back to Catalogue</a>
+            <form method="get" action="{% url 'clear_compare_selections' %}?{% if return_url %}{{ return_url|slice:'1:' }}{% endif %}" style="display: inline;">
+                <button type="submit" style="background: #6b7280; color: white; padding: 10px 14px; border-radius: 6px; font-weight: bold; border: none; cursor: pointer;">New Comparison</button>
+            </form>
         </div>
     </div>
 

@@ -358,7 +358,6 @@
                 </select>
                 <div class="search-actions">
                     <button type="submit">Search</button>
-                    <button type="submit" class="compare-button" form="compare-products-form">Compare Selected Products</button>
                     {% if search_query or selected_category %}
                         <a href="{% url 'buyer_home' %}">Clear Filters</a>
                     {% endif %}
@@ -372,6 +371,26 @@
                 </p>
             {% endif %}
         </div>
+
+        {% if selected_product_ids %}
+            <div style="background: #dbeafe; border: 1px solid #0284c7; border-radius: 6px; padding: 16px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <strong>{{ selected_product_ids|length }} product{{ selected_product_ids|length|pluralize }} selected for comparison</strong>
+                    {% if selected_product_ids|length == 2 %}
+                        <div style="margin-top: 10px;">
+                            <form method="get" action="{% url 'compare_products' %}" style="display: inline;">
+                                <button type="submit" class="compare-button" style="background: #00b341; color: white; padding: 10px 16px;">Compare Now</button>
+                            </form>
+                            <form method="get" action="{% url 'clear_compare_selections' %}?{% if search_query %}q={{ search_query|urlencode }}&{% endif %}{% if selected_category %}category={{ selected_category|urlencode }}&{% endif %}page={{ current_page }}" style="display: inline; margin-left: 10px;">
+                                <button type="submit" style="background: #6b7280; color: white; padding: 10px 16px; border: none; border-radius: 6px; cursor: pointer;">Clear Selection</button>
+                            </form>
+                        </div>
+                    {% else %}
+                        <p style="color: #475569; margin: 0; margin-top: 8px;">Select {{ remaining_selections }} more product{{ remaining_selections|pluralize }} to compare</p>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
 
         <form id="compare-products-form" method="get" action="{% url 'compare_products' %}">
             {% if search_query %}
@@ -395,10 +414,14 @@
                         <p>Category: {{ product.category }}</p>
                         <p>Price: ${{ product.price }}</p>
                         <p class="product-description">{{ product.description|truncatechars:90 }}</p>
-                        <label class="compare-select">
-                            <input type="checkbox" name="product_ids" value="{{ product.id }}">
-                            Select to compare
-                        </label>
+                        <form method="post" action="{% url 'toggle_compare_selection' product.id %}?{% if search_query %}q={{ search_query|urlencode }}&{% endif %}{% if selected_category %}category={{ selected_category|urlencode }}&{% endif %}page={{ current_page }}" style="display: inline;">
+                            {% csrf_token %}
+                            {% if product.id|stringformat:"s" in selected_product_ids %}
+                                <button type="submit" class="compare-select" style="background: #00b341; color: white; padding: 8px 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%;">✓ Selected for Compare</button>
+                            {% else %}
+                                <button type="submit" class="compare-select" style="background: #e5e7eb; color: #334155; padding: 8px 12px; border: none; border-radius: 6px; cursor: pointer; width: 100%;">Select to Compare</button>
+                            {% endif %}
+                        </form>
                         <div class="product-actions">
                             <button type="button" class="view-details-btn" data-modal-target="product-modal-{{ product.id }}">View Details</button>
                             <a class="add-to-cart-btn" href="{% url 'add_to_cart' product.id %}">Add to Cart</a>

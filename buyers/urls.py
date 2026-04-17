@@ -4,6 +4,8 @@ from . import views
 urlpatterns = [
     path('', views.buyer_homepage, name='buyer_home'),
     path('compare/', views.compare_products, name='compare_products'),
+    path('compare/toggle/<int:product_id>/', views.toggle_compare_selection, name='toggle_compare_selection'),
+    path('compare/clear/', views.clear_compare_selections, name='clear_compare_selections'),
     path('orders/', views.buyer_order_history, name='buyer_order_history'),
     path('cart/', views.cart_view, name="cart_view"),
     path('cart/add/<int:product_id>/', views.add_to_cart, name="add_to_cart"),
