@@ -5,6 +5,6 @@ djangorestframework_simplejwt==5.5.1
 PyJWT==2.11.0
 sqlparse==0.5.5
 tzdata==2025.3 
-python magic
+python-magic
 Pillow==12.1.1
 requests
