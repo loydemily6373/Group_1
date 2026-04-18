@@ -106,6 +106,84 @@
             font-weight: bold;
         }
 
+        .compare-button:hover {
+            background: #1f2937;
+        }
+
+        .compare-badge {
+            display: inline-block;
+            background: #dc2626;
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            line-height: 24px;
+            text-align: center;
+            font-size: 0.85rem;
+            font-weight: bold;
+            margin-left: 6px;
+            vertical-align: middle;
+        }
+
+        .compare-status-bar {
+            background: #ecfdf5;
+            border: 1px solid #d1fae5;
+            border-radius: 6px;
+            padding: 12px 16px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .compare-status-bar.hidden {
+            display: none;
+        }
+
+        .compare-item-badge {
+            background: #065f46;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            margin-top: 8px;
+            display: inline-block;
+        }
+
+        .compare-actions-group {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .compare-add-btn,
+        .compare-remove-btn {
+            padding: 6px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: bold;
+        }
+
+        .compare-add-btn {
+            background: #10b981;
+            color: white;
+        }
+
+        .compare-add-btn:hover {
+            background: #059669;
+        }
+
+        .compare-remove-btn {
+            background: #ef4444;
+            color: white;
+        }
+
+        .compare-remove-btn:hover {
+            background: #dc2626;
+        }
+
         .compare-select {
             display: flex;
             align-items: center;
@@ -372,95 +450,83 @@
             {% endif %}
         </div>
 
-        {% if selected_product_ids %}
-            <div style="background: #dbeafe; border: 1px solid #0284c7; border-radius: 6px; padding: 16px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+        {% if compare_count > 0 %}
+            <div class="compare-status-bar">
+                <span>Products in comparison: <strong>{{ compare_count }}/10</strong></span>
                 <div>
-                    <strong>{{ selected_product_ids|length }} product{{ selected_product_ids|length|pluralize }} selected for comparison</strong>
-                    {% if selected_product_ids|length == 2 %}
-                        <div style="margin-top: 10px;">
-                            <form method="get" action="{% url 'compare_products' %}" style="display: inline;">
-                                <button type="submit" class="compare-button" style="background: #00b341; color: white; padding: 10px 16px;">Compare Now</button>
-                            </form>
-                            <form method="get" action="{% url 'clear_compare_selections' %}?{% if search_query %}q={{ search_query|urlencode }}&{% endif %}{% if selected_category %}category={{ selected_category|urlencode }}&{% endif %}page={{ current_page }}" style="display: inline; margin-left: 10px;">
-                                <button type="submit" style="background: #6b7280; color: white; padding: 10px 16px; border: none; border-radius: 6px; cursor: pointer;">Clear Selection</button>
-                            </form>
-                        </div>
-                    {% else %}
-                        <p style="color: #475569; margin: 0; margin-top: 8px;">Select {{ remaining_selections }} more product{{ remaining_selections|pluralize }} to compare</p>
-                    {% endif %}
+                    <a href="{% url 'compare_products' %}" class="compare-button">View Comparison</a>
+                    <a href="{% url 'clear_compare' %}" class="compare-button" style="background: #dc2626;">Clear Comparison</a>
                 </div>
             </div>
         {% endif %}
 
-        <form id="compare-products-form" method="get" action="{% url 'compare_products' %}">
-            {% if search_query %}
-                <input type="hidden" name="q" value="{{ search_query }}">
-            {% endif %}
-            {% if selected_category %}
-                <input type="hidden" name="category" value="{{ selected_category }}">
-            {% endif %}
-            {% if current_page %}
-                <input type="hidden" name="page" value="{{ current_page }}">
-            {% endif %}
-            <div class="product-list">
-                {% for product in products %}
-                    <div class="product-card">
-                        {% if product.image %}
-                            <img class="product-image" src="{{ product.image.url }}" alt="{{ product.product_name }}">
-                        {% else %}
-                            <div class="product-image-placeholder">No Image Available</div>
-                        {% endif %}
-                        <h3>{{ product.product_name }}</h3>
-                        <p>Category: {{ product.category }}</p>
-                        <p>Price: ${{ product.price }}</p>
-                        <p class="product-description">{{ product.description|truncatechars:90 }}</p>
-                        <form method="post" action="{% url 'toggle_compare_selection' product.id %}?{% if search_query %}q={{ search_query|urlencode }}&{% endif %}{% if selected_category %}category={{ selected_category|urlencode }}&{% endif %}page={{ current_page }}" style="display: inline;">
-                            {% csrf_token %}
-                            {% if product.id|stringformat:"s" in selected_product_ids %}
-                                <button type="submit" class="compare-select" style="background: #00b341; color: white; padding: 8px 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%;">✓ Selected for Compare</button>
-                            {% else %}
-                                <button type="submit" class="compare-select" style="background: #e5e7eb; color: #334155; padding: 8px 12px; border: none; border-radius: 6px; cursor: pointer; width: 100%;">Select to Compare</button>
-                            {% endif %}
-                        </form>
-                        <div class="product-actions">
-                            <button type="button" class="view-details-btn" data-modal-target="product-modal-{{ product.id }}">View Details</button>
-                            <a class="add-to-cart-btn" href="{% url 'add_to_cart' product.id %}">Add to Cart</a>
-                        </div>
+        <div class="product-list">
+            {% for product in products %}
+                <div class="product-card">
+                    {% if product.image %}
+                        <img class="product-image" src="{{ product.image.url }}" alt="{{ product.product_name }}">
+                    {% else %}
+                        <div class="product-image-placeholder">No Image Available</div>
+                    {% endif %}
+                    <h3>{{ product.product_name }}</h3>
+                    <p>Category: {{ product.category }}</p>
+                    <p>Price: ${{ product.price }}</p>
+                    <p class="product-description">{{ product.description|truncatechars:90 }}</p>
+                    {% if product.id in compare_list %}
+                        <span class="compare-item-badge">✓ In Comparison</span>
+                    {% endif %}
+                    <div class="product-actions">
+                        <button type="button" class="view-details-btn" data-modal-target="product-modal-{{ product.id }}">View Details</button>
+                        <a class="add-to-cart-btn" href="{% url 'add_to_cart' product.id %}">Add to Cart</a>
                     </div>
+                    <div class="compare-actions-group">
+                        {% if product.id in compare_list %}
+                            <a href="{% url 'remove_from_compare' product.id %}" class="compare-remove-btn">Remove from Comparison</a>
+                        {% else %}
+                            <a href="{% url 'add_to_compare' product.id %}" class="compare-add-btn">Add to Comparison</a>
+                        {% endif %}
+                    </div>
+                </div>
 
-                    <div class="modal-overlay" id="product-modal-{{ product.id }}" aria-hidden="true">
-                        <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="product-modal-title-{{ product.id }}">
-                            <div class="modal-header">
-                                <h2 id="product-modal-title-{{ product.id }}">{{ product.product_name }}</h2>
-                                <button type="button" class="modal-close" data-modal-close aria-label="Close product details">&times;</button>
+                <div class="modal-overlay" id="product-modal-{{ product.id }}" aria-hidden="true">
+                    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="product-modal-title-{{ product.id }}">
+                        <div class="modal-header">
+                            <h2 id="product-modal-title-{{ product.id }}">{{ product.product_name }}</h2>
+                            <button type="button" class="modal-close" data-modal-close aria-label="Close product details">&times;</button>
+                        </div>
+                        <div class="modal-content">
+                            <div>
+                                {% if product.image %}
+                                    <img class="modal-image" src="{{ product.image.url }}" alt="{{ product.product_name }}">
+                                {% else %}
+                                    <div class="modal-image-placeholder">No Image Available</div>
+                                {% endif %}
                             </div>
-                            <div class="modal-content">
-                                <div>
-                                    {% if product.image %}
-                                        <img class="modal-image" src="{{ product.image.url }}" alt="{{ product.product_name }}">
+                            <div class="modal-details">
+                                <p><strong>Name:</strong> {{ product.product_name }}</p>
+                                <p><strong>Description:</strong> {{ product.description }}</p>
+                                <p><strong>Price:</strong> ${{ product.price }}</p>
+                                <p><strong>Category:</strong> {{ product.category }}</p>
+                                <p><strong>Stock:</strong> {{ product.stock }}</p>
+                                {% if product.id in compare_list %}
+                                    <p><span class="compare-item-badge">✓ In Comparison</span></p>
+                                {% endif %}
+                                <div class="product-actions">
+                                    <a class="add-to-cart-btn" href="{% url 'add_to_cart' product.id %}">Add to Cart</a>
+                                    {% if product.id in compare_list %}
+                                        <a href="{% url 'remove_from_compare' product.id %}" class="compare-remove-btn">Remove from Comparison</a>
                                     {% else %}
-                                        <div class="modal-image-placeholder">No Image Available</div>
+                                        <a href="{% url 'add_to_compare' product.id %}" class="compare-add-btn">Add to Comparison</a>
                                     {% endif %}
                                 </div>
-                                <div class="modal-details">
-                                    <p><strong>Name:</strong> {{ product.product_name }}</p>
-                                    <p><strong>Description:</strong> {{ product.description }}</p>
-                                    <p><strong>Price:</strong> ${{ product.price }}</p>
-                                    <p><strong>Category:</strong> {{ product.category }}</p>
-                                    <p><strong>Stock:</strong> {{ product.stock }}</p>
-                                    <div class="product-actions">
-                                        <a class="add-to-cart-btn" href="{% url 'add_to_cart' product.id %}">Add to Cart</a>
-                                    </div>
-                                </div>
                             </div>
                         </div>
                     </div>
-                {% empty %}
-                    <p>No matching products found.</p>
-                {% endfor %}
-            </div>
-
-        </form>
+                </div>
+            {% empty %}
+                <p>No matching products found.</p>
+            {% endfor %}
+        </div>
 
         {% if page_obj %}
             <div class="pagination">

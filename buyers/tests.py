@@ -371,7 +371,83 @@ class BuyerHomepageTests(TestCase):
 		self.assertEqual(response.status_code, 200)
 		self.assertContains(response, f'src="{product.image.url}"')
 
-	def test_compare_products_page_shows_selected_products(self):
+	def test_add_to_compare_adds_product_to_session(self):
+		# Adding a product to compare should store it in the session.
+		first_product = Product.objects.create(
+			seller_id=self.seller,
+			product_name='Compare Jacket',
+			category='Jacket',
+			price='45.00',
+			stock=3,
+			active=True,
+			redirect_to=None,
+			status='approved',
+			description='Warm compare item',
+			deleted_at=None,
+		)
+
+		response = self.client.get(reverse('add_to_compare', args=[first_product.id]))
+
+		# Check that session contains the product ID
+		self.assertIn('compare_products', self.client.session)
+		self.assertIn(first_product.id, self.client.session['compare_products'])
+		self.assertRedirects(response, reverse('buyer_home'))
+
+	def test_add_to_compare_from_different_pages(self):
+		# Products can be added to compare from different paginated pages.
+		products = []
+		for i in range(15):
+			product = Product.objects.create(
+				seller_id=self.seller,
+				product_name=f'Product {i+1}',
+				category='Jacket',
+				price=f'{40 + i}.00',
+				stock=5,
+				active=True,
+				redirect_to=None,
+				status='approved',
+				description=f'Product {i+1} description',
+				deleted_at=None,
+			)
+			products.append(product)
+
+		# Add product from first page
+		self.client.get(reverse('add_to_compare', args=[products[0].id]))
+		# Add product from second page
+		self.client.get(reverse('add_to_compare', args=[products[12].id]))
+
+		# Both should be in the session
+		self.assertIn(products[0].id, self.client.session['compare_products'])
+		self.assertIn(products[12].id, self.client.session['compare_products'])
+		self.assertEqual(len(self.client.session['compare_products']), 2)
+
+	def test_remove_from_compare_removes_product_from_session(self):
+		# Removing a product from compare should update the session.
+		first_product = Product.objects.create(
+			seller_id=self.seller,
+			product_name='Compare Jacket',
+			category='Jacket',
+			price='45.00',
+			stock=3,
+			active=True,
+			redirect_to=None,
+			status='approved',
+			description='Warm compare item',
+			deleted_at=None,
+		)
+
+		# Add product first
+		self.client.get(reverse('add_to_compare', args=[first_product.id]))
+		self.assertIn(first_product.id, self.client.session['compare_products'])
+
+		# Remove product
+		response = self.client.get(reverse('remove_from_compare', args=[first_product.id]))
+
+		self.assertNotIn(first_product.id, self.client.session['compare_products'])
+		self.assertEqual(len(self.client.session['compare_products']), 0)
+
+	def test_compare_products_displays_all_added_products(self):
+		# The compare page should display all products in the session.
 		first_product = Product.objects.create(
 			seller_id=self.seller,
 			product_name='Compare Jacket',
@@ -397,32 +473,69 @@ class BuyerHomepageTests(TestCase):
 			deleted_at=None,
 		)
 
-		# Set products in session for comparison
-		session = self.client.session
-		session['compare_selections'] = [str(first_product.id), str(second_product.id)]
-		session.save()
+		# Add both products to compare
+		self.client.get(reverse('add_to_compare', args=[first_product.id]))
+		self.client.get(reverse('add_to_compare', args=[second_product.id]))
 
-		response = self.client.get(
-			reverse('compare_products'),
-			{
-				'q': 'Compare',
-				'category': 'Jacket',
-				'page': 2,
-			},
-		)
+		response = self.client.get(reverse('compare_products'))
 
 		self.assertEqual(response.status_code, 200)
 		self.assertContains(response, 'Compare Products')
 		self.assertContains(response, 'Compare Jacket')
 		self.assertContains(response, 'Compare Shoes')
-		self.assertEqual(list(response.context['products']), [first_product, second_product])
-		self.assertEqual(response.context['return_url'], reverse('buyer_home') + '?q=Compare&category=Jacket&page=2')
-		self.assertContains(response, 'href="%s"' % (reverse('buyer_home') + '?q=Compare&amp;category=Jacket&amp;page=2'), html=False)
+		self.assertIn(first_product.id, [p.id for p in response.context['products']])
+		self.assertIn(second_product.id, [p.id for p in response.context['products']])
 
-	def test_compare_products_requires_exactly_two_products(self):
+	def test_compare_products_redirects_when_empty(self):
+		# Viewing the compare page with no items should redirect home with error.
+		response = self.client.get(reverse('compare_products'), follow=True)
+
+		self.assertRedirects(response, reverse('buyer_home'))
+		self.assertContains(response, 'Add products to compare before viewing the comparison.')
+
+	def test_clear_compare_clears_session(self):
+		# Clearing comparison should remove all products from the session.
 		first_product = Product.objects.create(
 			seller_id=self.seller,
-			product_name='Single Compare Product',
+			product_name='Compare Jacket',
+			category='Jacket',
+			price='45.00',
+			stock=3,
+			active=True,
+			redirect_to=None,
+			status='approved',
+			description='Warm compare item',
+			deleted_at=None,
+		)
+		second_product = Product.objects.create(
+			seller_id=self.seller,
+			product_name='Compare Shoes',
+			category='Shoes',
+			price='55.00',
+			stock=4,
+			active=True,
+			redirect_to=None,
+			status='approved',
+			description='Light compare item',
+			deleted_at=None,
+		)
+
+		# Add products
+		self.client.get(reverse('add_to_compare', args=[first_product.id]))
+		self.client.get(reverse('add_to_compare', args=[second_product.id]))
+		self.assertEqual(len(self.client.session['compare_products']), 2)
+
+		# Clear comparison
+		response = self.client.get(reverse('clear_compare'))
+
+		self.assertRedirects(response, reverse('buyer_home'))
+		self.assertEqual(len(self.client.session.get('compare_products', [])), 0)
+
+	def test_buyer_homepage_shows_compare_count(self):
+		# The homepage should display the count of products in the comparison.
+		first_product = Product.objects.create(
+			seller_id=self.seller,
+			product_name='Compare Jacket',
 			category='Jacket',
 			price='45.00',
 			stock=3,
@@ -433,42 +546,17 @@ class BuyerHomepageTests(TestCase):
 			deleted_at=None,
 		)
 
-		# Set only one product in session for comparison
-		session = self.client.session
-		session['compare_selections'] = [str(first_product.id)]
-		session.save()
+		response = self.client.get(reverse('buyer_home'))
+		self.assertEqual(response.context['compare_count'], 0)
+		self.assertNotContains(response, 'Products in comparison')
 
-		response = self.client.get(
-			reverse('compare_products'),
-			{'q': 'Single', 'category': 'Jacket', 'page': 3},
-			follow=True,
-		)
+		# Add product
+		self.client.get(reverse('add_to_compare', args=[first_product.id]))
+		response = self.client.get(reverse('buyer_home'))
 
-		self.assertRedirects(response, reverse('buyer_home') + '?q=Single&category=Jacket&page=3')
-		self.assertContains(response, 'Select exactly two approved products to compare.')
-
-	def test_buyer_homepage_compare_form_preserves_current_filters(self):
-		Product.objects.create(
-			seller_id=self.seller,
-			product_name='Filter Product',
-			category='Jacket',
-			price='45.00',
-			stock=3,
-			active=True,
-			redirect_to=None,
-			status='approved',
-			description='Filtered compare item',
-			deleted_at=None,
-		)
-
-		response = self.client.get(reverse('buyer_home'), {'q': 'Filter', 'category': 'Jacket', 'page': 1})
-
-		self.assertEqual(response.status_code, 200)
-		# Check that the toggle form for product selection is present with filters preserved in the URL
-		self.assertContains(response, 'action="/buyer/compare/toggle/', html=False)
-		self.assertContains(response, 'q=Filter', html=False)
-		self.assertContains(response, 'category=Jacket', html=False)
-		self.assertContains(response, 'page=1', html=False)
+		self.assertEqual(response.context['compare_count'], 1)
+		self.assertContains(response, 'Products in comparison')
+		self.assertContains(response, '1/10')
 
 
 class CheckoutFlowTests(TestCase):
