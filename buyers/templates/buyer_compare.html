@@ -137,13 +137,15 @@
                     <p class="compare-row"><strong>Description:</strong> {{ product.description }}</p>
                     <div class="compare-actions">
                         <a href="{% url 'add_to_cart' product.id %}">Add to Cart</a>
+                        <a href="{% url 'remove_from_compare' product.id %}">Remove from Comparison</a>
                     </div>
                 </section>
             {% endfor %}
         </div>
 
         <div class="compare-actions">
-            <a href="{{ return_url }}">Back to Catalogue</a>
+            <a href="{% url 'buyer_home' %}">Continue Shopping</a>
+            <a href="{% url 'clear_compare' %}" style="background: #dc2626;">Clear Comparison</a>
         </div>
     </div>
 
