@@ -1186,3 +1186,246 @@ class ProductSeedDataTests(TestCase):
                 first_product = Product.objects.exclude(image='').exclude(image__isnull=True).first()
                 self.assertIsNotNone(first_product)
                 self.assertTrue(first_product.image.name.endswith('.png'))
+
+
+class WebhookTests(TestCase):
+    def setUp(self):
+        from .models import WebhookURL
+        
+        self.seller = User.objects.create_user(
+            username='webhook-seller',
+            password='StrongPass123!',
+            first_name='Webhook',
+            last_name='Seller',
+            email='webhook-seller@example.com',
+            role='seller',
+        )
+        self.buyer = User.objects.create_user(
+            username='webhook-buyer',
+            password='StrongPass123!',
+            first_name='Webhook',
+            last_name='Buyer',
+            email='webhook-buyer@example.com',
+            role='buyer',
+        )
+        self.product = Product.objects.create(
+            seller_id=self.seller,
+            product_name='Webhook Test Product',
+            category='T-Shirt',
+            price='29.99',
+            stock=10,
+            description='Product for webhook testing',
+            active=True,
+            status='approved',
+            redirect_to=None,
+            deleted_at=None,
+        )
+        self.seller_address = SellerShippingAddress.objects.create(
+            seller=self.seller,
+            label='Warehouse',
+            recipient_name='Webhook Seller',
+            address_line_1='123 Test Street',
+            city='Dublin',
+            state='Leinster',
+            postal_code='D01TEST',
+            country='Ireland',
+            is_default=True,
+        )
+        self.buyer_address = BuyerShippingAddress.objects.create(
+            buyer=self.buyer,
+            label='Home',
+            recipient_name='Webhook Buyer',
+            address_line_1='456 Main Road',
+            address_line_2='Apt 5',
+            city='Cork',
+            state='Munster',
+            postal_code='T12TEST',
+            country='Ireland',
+            is_default=True,
+        )
+        self.payment_method = PaymentMethod.objects.create(
+            buyer=self.buyer,
+            label='Visa',
+            cardholder_name='Webhook Buyer',
+            card_brand='visa',
+            full_card_number='4111111111111111',
+            last_four='1111',
+            expiry_month=12,
+            expiry_year=2030,
+            is_default=True,
+        )
+
+    def test_webhook_url_created_for_new_seller(self):
+        from .models import WebhookURL
+        
+        # Create a new seller
+        new_seller = User.objects.create_user(
+            username='new-webhook-seller',
+            password='StrongPass123!',
+            first_name='New',
+            last_name='Seller',
+            email='new-webhook-seller@example.com',
+            role='seller',
+        )
+        
+        # Check that webhook was created
+        webhook = WebhookURL.objects.filter(seller=new_seller).first()
+        self.assertIsNotNone(webhook)
+        self.assertTrue(webhook.is_active)
+        self.assertIn('seller_id=' + str(new_seller.id), webhook.webhook_url)
+
+    def test_webhook_url_is_unique(self):
+        from .models import WebhookURL
+        
+        webhook1 = WebhookURL.objects.filter(seller=self.seller).first()
+        webhook2 = WebhookURL.objects.filter(seller=self.buyer).first()
+        
+        # Webhook URLs should be different for different users
+        if webhook1 and webhook2:
+            self.assertNotEqual(webhook1.webhook_url, webhook2.webhook_url)
+
+    def test_seller_can_toggle_webhook(self):
+        from .models import WebhookURL
+        
+        webhook = WebhookURL.objects.filter(seller=self.seller).first()
+        self.assertTrue(webhook.is_active)
+        
+        # Toggle to inactive
+        webhook.is_active = False
+        webhook.save()
+        
+        webhook.refresh_from_db()
+        self.assertFalse(webhook.is_active)
+        
+        # Toggle back to active
+        webhook.is_active = True
+        webhook.save()
+        
+        webhook.refresh_from_db()
+        self.assertTrue(webhook.is_active)
+
+    def test_webhook_settings_page_requires_seller_role(self):
+        from .models import WebhookURL
+        
+        # Try to access as buyer
+        client = Client()
+        client.force_login(self.buyer)
+        response = client.get(reverse('webhook_settings'))
+        
+        # Should be redirected or forbidden
+        self.assertNotEqual(response.status_code, 200)
+
+    def test_webhook_settings_page_shows_webhook_url_for_seller(self):
+        from .models import WebhookURL
+        
+        client = Client()
+        client.force_login(self.seller)
+        response = client.get(reverse('webhook_settings'))
+        
+        self.assertEqual(response.status_code, 200)
+        webhook = WebhookURL.objects.filter(seller=self.seller).first()
+        # Check for the webhook URL path without the token (since token is unique)
+        self.assertContains(response, '/webhook/order/')
+        # Verify webhook exists and is displayed
+        self.assertIsNotNone(webhook)
+        self.assertTrue(webhook.is_active)
+
+    def test_webhook_payload_contains_required_fields(self):
+        """Test that webhook payload includes all required information."""
+        from .webhooks import send_order_webhook
+        from unittest.mock import patch, MagicMock
+        
+        # Create an order and order item
+        order = Order.objects.create(
+            buyer=self.buyer,
+            buyer_shipping_address=self.buyer_address,
+            payment_method=self.payment_method,
+            order_number='ORD-WEBHOOK-TEST',
+            subtotal='29.99',
+            shipping_cost='6.99',
+            tax_amount='2.10',
+            grand_total='39.08',
+        )
+        order_item = OrderItem.objects.create(
+            order=order,
+            product=self.product,
+            seller=self.seller,
+            seller_shipping_address=self.seller_address,
+            product_name='Webhook Test Product',
+            unit_price='29.99',
+            quantity=1,
+            line_total='29.99',
+        )
+        
+        # Mock the requests.post to capture the payload
+        with patch('sellers.webhooks.requests.post') as mock_post:
+            mock_post.return_value = MagicMock(status_code=200)
+            send_order_webhook(order_item)
+            
+            # Verify that post was called
+            self.assertTrue(mock_post.called)
+            
+            # Get the payload that was sent
+            call_args = mock_post.call_args
+            payload = call_args.kwargs['json']
+            
+            # Check required fields
+            self.assertEqual(payload['event'], 'order_placed')
+            self.assertEqual(payload['order_number'], 'ORD-WEBHOOK-TEST')
+            self.assertEqual(payload['product_name'], 'Webhook Test Product')
+            self.assertEqual(payload['quantity'], 1)
+            self.assertEqual(payload['unit_price'], '29.99')
+            
+            # Check shipping address fields
+            self.assertEqual(payload['shipping_address']['recipient_name'], 'Webhook Buyer')
+            self.assertEqual(payload['shipping_address']['address_line_1'], '456 Main Road')
+            self.assertEqual(payload['shipping_address']['address_line_2'], 'Apt 5')
+            self.assertEqual(payload['shipping_address']['city'], 'Cork')
+            self.assertEqual(payload['shipping_address']['state'], 'Munster')
+            self.assertEqual(payload['shipping_address']['postal_code'], 'T12TEST')
+            self.assertEqual(payload['shipping_address']['country'], 'Ireland')
+            
+            # Check timestamp fields
+            self.assertIn('order_date', payload)
+            self.assertIn('timestamp', payload)
+
+    def test_webhook_not_sent_if_inactive(self):
+        """Test that webhook is not sent if it's marked as inactive."""
+        from .models import WebhookURL
+        from .webhooks import send_order_webhook
+        from unittest.mock import patch
+        
+        # Deactivate webhook
+        webhook = WebhookURL.objects.filter(seller=self.seller).first()
+        webhook.is_active = False
+        webhook.save()
+        
+        # Create an order and order item
+        order = Order.objects.create(
+            buyer=self.buyer,
+            buyer_shipping_address=self.buyer_address,
+            payment_method=self.payment_method,
+            order_number='ORD-WEBHOOK-INACTIVE',
+            subtotal='29.99',
+            shipping_cost='6.99',
+            tax_amount='2.10',
+            grand_total='39.08',
+        )
+        order_item = OrderItem.objects.create(
+            order=order,
+            product=self.product,
+            seller=self.seller,
+            seller_shipping_address=self.seller_address,
+            product_name='Webhook Test Product',
+            unit_price='29.99',
+            quantity=1,
+            line_total='29.99',
+        )
+        
+        # Mock the requests.post to ensure it's not called
+        with patch('sellers.webhooks.requests.post') as mock_post:
+            result = send_order_webhook(order_item)
+            
+            # Verify that post was NOT called
+            self.assertFalse(mock_post.called)
+            self.assertFalse(result)

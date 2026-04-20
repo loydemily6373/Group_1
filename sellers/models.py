@@ -1,4 +1,5 @@
 import uuid
+import secrets
 
 from django.db import models
 from django.utils import timezone
@@ -85,4 +86,50 @@ class ReturnRequest(models.Model):
 
     def __str__(self):
         return f"Return for {self.order_item.order.order_number} - {self.order_item.product_name}"
+
+
+class WebhookURL(models.Model):
+    # Sellers can subscribe to order notifications via webhooks.
+    seller = models.OneToOneField('accounts.User', on_delete=models.CASCADE, related_name='webhook_url')
+    webhook_url = models.URLField(max_length=500, unique=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Webhook for {self.seller.username} - {'Active' if self.is_active else 'Inactive'}"
+
+    @classmethod
+    def generate_unique_webhook_url(cls, seller):
+        """Generate a unique webhook URL for a seller."""
+        from django.urls import reverse
+        from django.conf import settings
+        
+        # Generate a unique token for the webhook
+        token = secrets.token_urlsafe(32)
+        # Construct the webhook URL
+        webhook_path = reverse('receive_order_webhook')
+        base_url = getattr(settings, 'WEBHOOK_BASE_URL', 'http://localhost:8000')
+        webhook_url = f"{base_url}{webhook_path}?seller_id={seller.id}&token={token}"
+        return webhook_url
+
+
+class Notification(models.Model):
+    # In-app notifications for sellers when they receive orders
+    seller = models.ForeignKey('accounts.User', on_delete=models.CASCADE, related_name='notifications')
+    order_number = models.CharField(max_length=50)
+    product_name = models.CharField(max_length=200)
+    quantity = models.IntegerField()
+    is_seen = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Order {self.order_number} - {self.product_name} (Seller: {self.seller.username})"
+
+    @property
+    def message(self):
+        return f"New order! {self.quantity}x {self.product_name}"
 

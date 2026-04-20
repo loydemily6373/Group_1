@@ -6,3 +6,6 @@ class SellersConfig(AppConfig):
     name = 'sellers'
     label = 'products'
     verbose_name = 'Sellers'
+
+    def ready(self):
+        import sellers.signals

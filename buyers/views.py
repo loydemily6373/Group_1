@@ -13,6 +13,7 @@ from django.utils import timezone
 from admin.models import UserActivity
 from accounts.permissions import role_required
 from sellers.models import Product
+from sellers.webhooks import send_order_webhook
 
 from .forms import BuyerShippingAddressForm, PaymentMethodForm
 from .models import BuyerShippingAddress, CartItem, Order, OrderItem, PaymentMethod, SellerShippingAddress
@@ -439,7 +440,7 @@ def checkout_view(request):
                         if product.stock < row['quantity']:
                             raise ValueError(f"Not enough stock for {product.product_name}.")
 
-                        OrderItem.objects.create(
+                        order_item = OrderItem.objects.create(
                             order=order,
                             product=product,
                             seller=seller,
@@ -449,6 +450,9 @@ def checkout_view(request):
                             quantity=row['quantity'],
                             line_total=round(row['item_total'], 2),
                         )
+
+                        # Send webhook notification to the seller
+                        send_order_webhook(order_item)
 
                         UserActivity.record_purchase(request.user, increment=row['quantity'])
 

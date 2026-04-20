@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Webhook Settings</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background-color: #f4f6f8;
+            color: #1f2937;
+        }
+
+        header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 15px 30px;
+        }
+
+        nav {
+            background-color: #34495e;
+            padding: 10px 30px;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            margin-right: 20px;
+            font-weight: bold;
+        }
+
+        .container {
+            padding: 30px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .webhook-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        .webhook-card h2 {
+            margin-top: 0;
+            color: #0f172a;
+        }
+
+        .webhook-status {
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+            font-weight: bold;
+        }
+
+        .webhook-status.active {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .webhook-status.inactive {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+
+        .webhook-url-section {
+            margin-bottom: 20px;
+        }
+
+        .webhook-url-section label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #0f172a;
+        }
+
+        .webhook-url-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            background-color: #f3f4f6;
+            color: #4b5563;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            box-sizing: border-box;
+            word-break: break-all;
+        }
+
+        .info-box {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 6px;
+            padding: 12px 16px;
+            margin-bottom: 20px;
+            color: #1e40af;
+        }
+
+        .info-box h3 {
+            margin-top: 0;
+            margin-bottom: 8px;
+        }
+
+        .info-box ul {
+            margin: 8px 0;
+            padding-left: 20px;
+        }
+
+        .info-box li {
+            margin-bottom: 4px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: #2563eb;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+
+        .btn-danger {
+            background: #dc2626;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #b91c1c;
+        }
+
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #4b5563;
+        }
+
+        .message-list {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 20px;
+        }
+
+        .message-list li {
+            padding: 12px 14px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .message-list .error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .message-list .success {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        footer {
+            background-color: #2c3e50;
+            color: white;
+            text-align: center;
+            padding: 15px;
+            margin-top: 40px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Webhook Settings</h1>
+    </header>
+
+    <nav>
+        <a href="{% url 'seller_home' %}">Home</a>
+        <a href="{% url 'product_list' %}">My Listings</a>
+        <a href="{% url 'product_creation' %}">Add Product</a>
+        <a href="{% url 'seller_order_history' %}">Order History</a>
+        <a href="{% url 'seller_return_requests' %}">Pending Returns</a>
+        <a href="{% url 'seller_shipping_address' %}">Shipping Address</a>
+        <a href="{% url 'webhook_settings' %}">Webhook Settings</a>
+        <a href="{% url 'account_logout' %}">Logout</a>
+    </nav>
+
+    <div class="container">
+        {% if messages %}
+            <ul class="message-list">
+                {% for message in messages %}
+                    <li class="{{ message.tags|default:'info' }}">{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        <div class="webhook-card">
+            <h2>Order Notification Webhook</h2>
+            
+            <div class="webhook-status {% if webhook.is_active %}active{% else %}inactive{% endif %}">
+                Status: {% if webhook.is_active %}🟢 Active{% else %}🔴 Inactive{% endif %}
+            </div>
+
+            <div class="webhook-url-section">
+                <label for="webhook-url">Your Webhook URL:</label>
+                <input type="text" id="webhook-url" class="webhook-url-input" value="{{ webhook.webhook_url }}" readonly>
+                <small style="color: #6b7280; display: block; margin-top: 8px;">Copy this URL and configure it in your external system to receive order notifications.</small>
+            </div>
+
+            <div class="info-box">
+                <h3>📝 What You'll Receive</h3>
+                <p>When a customer places an order for your products, we'll send a POST request to your webhook URL with the following information:</p>
+                <ul>
+                    <li><strong>Product Name:</strong> Name of the ordered product</li>
+                    <li><strong>Quantity & Price:</strong> Item quantity and unit price</li>
+                    <li><strong>Shipping Address:</strong> Complete delivery address</li>
+                    <li><strong>Order Date & Time:</strong> When the order was placed</li>
+                </ul>
+            </div>
+
+            <div class="info-box" style="background: #fef3c7; border-color: #fcd34d; color: #92400e;">
+                <h3>⚙️ Configuration Instructions</h3>
+                <ol style="margin: 8px 0; padding-left: 20px;">
+                    <li>Copy your webhook URL above</li>
+                    <li>Go to your system/service that you want to integrate with</li>
+                    <li>Add a webhook endpoint that points to your system</li>
+                    <li>Our system will send POST requests to this URL whenever someone orders your products</li>
+                    <li>Toggle the switch below to activate/deactivate notifications</li>
+                </ol>
+            </div>
+
+            <form method="post" action="{% url 'toggle_webhook' %}">
+                {% csrf_token %}
+                <div class="button-group">
+                    {% if webhook.is_active %}
+                        <button type="submit" class="btn btn-danger">Deactivate Webhook</button>
+                    {% else %}
+                        <button type="submit" class="btn btn-primary">Activate Webhook</button>
+                    {% endif %}
+                    <a href="{% url 'seller_home' %}" class="btn btn-secondary">Back to Dashboard</a>
+                </div>
+            </form>
+        </div>
+
+        <div class="webhook-card">
+            <h2>Sample Payload</h2>
+            <p>Here's an example of what you'll receive in the webhook POST request:</p>
+            <pre style="background: #f3f4f6; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.85rem;"><code>{
+  "event": "order_placed",
+  "order_number": "ORD-20260419120000-ABC123",
+  "product_name": "Premium T-Shirt",
+  "quantity": 2,
+  "unit_price": "29.99",
+  "line_total": "59.98",
+  "shipping_address": {
+    "recipient_name": "John Doe",
+    "address_line_1": "123 Main Street",
+    "address_line_2": "Apt 4B",
+    "city": "New York",
+    "state": "NY",
+    "postal_code": "10001",
+    "country": "USA",
+    "phone_number": "555-0123"
+  },
+  "order_date": "2026-04-19T12:00:00Z",
+  "timestamp": "2026-04-19T12:00:00.123456Z"
+}</code></pre>
+        </div>
+    </div>
+
+    <footer>
+        © 2026 ThreadSwitch
+    </footer>
+</body>
+</html>
