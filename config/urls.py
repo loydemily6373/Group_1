@@ -2,6 +2,8 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import path, include
 from accounts.views import admin_home, index_view, login_view, signup_view
+from sellers.views import receive_order_webhook
+
 urlpatterns = [
     path('accounts/', include('accounts.urls')),
     path('', index_view, name='index'),
@@ -13,6 +15,8 @@ urlpatterns = [
     path('sellers/', include('sellers.urls')),
     path('buyer/', include('buyers.urls')),
     path('admin/', include('admin.urls')),
+    # Webhook endpoint for receiving order notifications
+    path('webhook/order/', receive_order_webhook, name='receive_order_webhook'),
 ]
 
 if settings.DEBUG:

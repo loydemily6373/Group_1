@@ -2,6 +2,7 @@ from collections import OrderedDict
 from decimal import Decimal
 
 from django.contrib import messages
+from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 
 from accounts.permissions import role_required
@@ -33,8 +34,15 @@ def _update_parent_order_status(order):
 @role_required('seller')
 def seller_home(request):
     # Seller pages now require the logged-in user to have the seller role.
+    from .models import Notification
+    
     has_default_shipping_address = SellerShippingAddress.objects.filter(seller=request.user, is_default=True).exists()
-    return render(request, 'sellers/seller_home.html', {'has_default_shipping_address': has_default_shipping_address})
+    unseen_notifications = Notification.objects.filter(seller=request.user, is_seen=False).order_by('-created_at')
+    
+    return render(request, 'sellers/seller_home.html', {
+        'has_default_shipping_address': has_default_shipping_address,
+        'unseen_notifications': unseen_notifications,
+    })
 
 
 @role_required('seller')
@@ -287,5 +295,95 @@ def reject_return(request, return_id):
     return_request.save(update_fields=['status', 'updated_at'])
     messages.success(request, 'Return request rejected.')
     return redirect('seller_return_requests')
+
+
+@role_required('seller')
+def webhook_settings(request):
+    """Display seller's webhook settings."""
+    from .models import WebhookURL
+    
+    webhook = WebhookURL.objects.filter(seller=request.user).first()
+    
+    if not webhook:
+        messages.error(request, 'Webhook configuration not found.')
+        return redirect('seller_home')
+    
+    return render(request, 'sellers/webhook_settings.html', {
+        'webhook': webhook,
+    })
+
+
+@role_required('seller')
+def toggle_webhook(request):
+    """Toggle webhook active status."""
+    from .models import WebhookURL
+    
+    if request.method == 'POST':
+        webhook = WebhookURL.objects.filter(seller=request.user).first()
+        
+        if not webhook:
+            messages.error(request, 'Webhook configuration not found.')
+            return redirect('seller_home')
+        
+        webhook.is_active = not webhook.is_active
+        webhook.save(update_fields=['is_active', 'updated_at'])
+        
+        status = 'activated' if webhook.is_active else 'deactivated'
+        messages.success(request, f'Webhook {status} successfully.')
+    
+    return redirect('webhook_settings')
+
+
+@role_required('seller')
+def dismiss_notification(request, notification_id):
+    """Mark a notification as seen/dismissed."""
+    from .models import Notification
+    
+    notification = get_object_or_404(Notification, id=notification_id, seller=request.user)
+    notification.is_seen = True
+    notification.save(update_fields=['is_seen'])
+    
+    messages.success(request, 'Notification dismissed.')
+    return redirect('seller_home')
+
+
+def receive_order_webhook(request):
+    """
+    Receive webhook POST requests from the platform when orders are placed.
+    This endpoint is public and validates requests using seller ID and token.
+    """
+    import json
+    import logging
+    
+    logger = logging.getLogger(__name__)
+    
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+    
+    try:
+        seller_id = request.GET.get('seller_id')
+        token = request.GET.get('token')
+        
+        if not seller_id or not token:
+            logger.warning('Webhook request missing seller_id or token')
+            return JsonResponse({'error': 'Missing credentials'}, status=400)
+        
+        from .models import WebhookURL
+        webhook = WebhookURL.objects.filter(seller_id=seller_id, webhook_url__contains=token).first()
+        
+        if not webhook:
+            logger.warning(f'Invalid webhook token for seller {seller_id}')
+            return JsonResponse({'error': 'Invalid webhook configuration'}, status=401)
+        
+        # Request is valid - the webhook was successfully received
+        # In a real system, you might want to log this or do something with the payload
+        logger.info(f'Webhook received for seller {webhook.seller.username}')
+        
+        return JsonResponse({'status': 'received'}, status=200)
+        
+    except Exception as e:
+        logger.error(f'Error in webhook endpoint: {str(e)}')
+        return JsonResponse({'error': 'Internal server error'}, status=500)
+
 
 

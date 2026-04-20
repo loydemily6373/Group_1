@@ -7,3 +7,4 @@ sqlparse==0.5.5
 tzdata==2025.3 
 python-magic
 Pillow==12.1.1
+requests==2.33.1

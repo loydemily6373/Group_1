@@ -76,6 +76,50 @@
             padding: 15px;
             margin-top: 40px;
         }
+
+        .notification {
+            background-color: #e8f4f8;
+            border-left: 5px solid #3498db;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .notification-content {
+            flex-grow: 1;
+        }
+
+        .notification-content strong {
+            display: block;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .notification-content small {
+            color: #666;
+        }
+
+        .notification-dismiss {
+            background-color: #95a5a6;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-left: 15px;
+        }
+
+        .notification-dismiss:hover {
+            background-color: #7f8c8d;
+        }
+
+        .notifications-container {
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 
@@ -90,12 +134,32 @@
         <a href="{% url 'product_list' %}">My Listings</a>
         <a href="{% url 'product_creation' %}">Add Product</a>
         <a href="{% url 'seller_order_history' %}">Order History</a>
+        <a href="{% url 'seller_return_requests' %}">Pending Returns</a>
         <a href="{% url 'seller_shipping_address' %}">Shipping Address</a>
+        <a href="{% url 'webhook_settings' %}">Webhook Settings</a>
         <a href="{% url 'account_logout' %}">Logout</a>
     
     </nav>
 
     <div class="container">
+
+        {% if unseen_notifications %}
+            <div class="notifications-container">
+                <h3>📬 New Notifications</h3>
+                {% for notification in unseen_notifications %}
+                    <div class="notification">
+                        <div class="notification-content">
+                            <strong>{{ notification.message }}</strong>
+                            <small>Order #{{ notification.order_number }} • {{ notification.created_at|date:"M d, Y H:i" }}</small>
+                        </div>
+                        <form method="POST" action="{% url 'dismiss_notification' notification.id %}" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="notification-dismiss">Dismiss</button>
+                        </form>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
 
         {% if not has_default_shipping_address %}
             <div class="card" style="width: 100%; border-left: 5px solid #f39c12;">
@@ -130,6 +194,12 @@
                 <h3>Order History</h3>
                 <p>Review buyer orders that include your products.</p>
                 <a class="button-link" href="{% url 'seller_order_history' %}">View Orders</a>
+            </div>
+
+            <div class="card">
+                <h3>Webhook Settings</h3>
+                <p>Manage order notification webhooks and view your webhook URL.</p>
+                <a class="button-link" href="{% url 'webhook_settings' %}">Manage Webhooks</a>
             </div>
 
         </div>

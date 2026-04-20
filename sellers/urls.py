@@ -15,4 +15,7 @@ urlpatterns = [
     path('returns/seller/', views.seller_return_requests, name='seller_return_requests'),
     path('returns/<int:return_id>/approve/', views.approve_return, name='approve_return'),
     path('returns/<int:return_id>/reject/', views.reject_return, name='reject_return'),
+    path('webhooks/', views.webhook_settings, name='webhook_settings'),
+    path('webhooks/toggle/', views.toggle_webhook, name='toggle_webhook'),
+    path('notifications/<int:notification_id>/dismiss/', views.dismiss_notification, name='dismiss_notification'),
 ]
