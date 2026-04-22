@@ -9,6 +9,6 @@ def create_product(request):
             product.save()
             return redirect('product_list')
     else:
-        form = ProductForm()
+        form = ProductForm(request.POST or None, request.FILES or None, instance=product)
         
     return render(request, 'products/create_product.html', {'form': form})
