@@ -1,6 +1,6 @@
 from django import forms
 
-from .models import BuyerShippingAddress, PaymentMethod, SellerShippingAddress
+from .models import BuyerShippingAddress, PaymentMethod, SellerShippingAddress, Review
 
 
 class BuyerShippingAddressForm(forms.ModelForm):
@@ -49,3 +49,14 @@ class SellerShippingAddressForm(forms.ModelForm):
             'country',
             'phone_number',
         ]
+
+
+class ReviewForm(forms.ModelForm):
+    class Meta:
+        model = Review
+        fields = ['rating', 'title', 'comment']
+        widgets = {
+            'rating': forms.RadioSelect(),
+            'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Review title'}),
+            'comment': forms.Textarea(attrs={'class': 'form-control', 'rows': 4, 'placeholder': 'Share your experience...'}),
+        }

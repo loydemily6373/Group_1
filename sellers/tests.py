@@ -1357,16 +1357,17 @@ class WebhookTests(TestCase):
             line_total='29.99',
         )
         
-        # Mock the requests.post to capture the payload
-        with patch('sellers.webhooks.requests.post') as mock_post:
+        # Mock both requests.post and send_slack_notification to avoid multiple calls
+        with patch('sellers.webhooks.requests.post') as mock_post, \
+             patch('sellers.webhooks.send_slack_notification'):
             mock_post.return_value = MagicMock(status_code=200)
             send_order_webhook(order_item)
             
             # Verify that post was called
             self.assertTrue(mock_post.called)
             
-            # Get the payload that was sent
-            call_args = mock_post.call_args
+            # Get the payload that was sent (first call is the webhook)
+            call_args = mock_post.call_args_list[0]
             payload = call_args.kwargs['json']
             
             # Check required fields
@@ -1422,10 +1423,11 @@ class WebhookTests(TestCase):
             line_total='29.99',
         )
         
-        # Mock the requests.post to ensure it's not called
-        with patch('sellers.webhooks.requests.post') as mock_post:
+        # Mock the requests.post to ensure it's not called for webhook, and mock Slack too
+        with patch('sellers.webhooks.requests.post') as mock_post, \
+             patch('sellers.webhooks.send_slack_notification'):
             result = send_order_webhook(order_item)
             
-            # Verify that post was NOT called
+            # Verify that post was NOT called (webhook should not be sent if inactive)
             self.assertFalse(mock_post.called)
-            self.assertFalse(result)
+            self.assertTrue(result)  # Function returns True even if webhook not sent, as notification was created

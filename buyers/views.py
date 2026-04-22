@@ -5,7 +5,7 @@ from urllib.parse import urlencode
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Q, Avg, Count
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.utils import timezone
@@ -16,7 +16,7 @@ from sellers.models import Product
 from sellers.webhooks import send_order_webhook
 
 from .forms import BuyerShippingAddressForm, PaymentMethodForm
-from .models import BuyerShippingAddress, CartItem, Order, OrderItem, PaymentMethod, SellerShippingAddress
+from .models import BuyerShippingAddress, CartItem, Order, OrderItem, PaymentMethod, SellerShippingAddress, Review
 
 
 CHECKOUT_SHIPPING_RATE = Decimal('6.99')
@@ -232,9 +232,34 @@ def buyer_homepage(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
+    # Add review statistics to each product
+    products_with_reviews = []
+    for product in page_obj.object_list:
+        review_stats = Review.objects.filter(
+            product=product,
+            status='approved'
+        ).aggregate(
+            avg_rating=Avg('rating'),
+            review_count=Count('id')
+        )
+        
+        # Get top 3 reviews for display
+        reviews = Review.objects.filter(
+            product=product,
+            status='approved'
+        ).select_related('buyer').order_by('-created_at')[:3]
+        
+        product_data = {
+            'product': product,
+            'avg_rating': review_stats['avg_rating'],
+            'review_count': review_stats['review_count'] or 0,
+            'reviews': reviews,
+        }
+        products_with_reviews.append(product_data)
+    
     compare_list = _get_compare_session(request)
     context = {
-        'products': page_obj.object_list,
+        'products': products_with_reviews,
         'page_obj': page_obj,
         'current_page': page_obj.number,
         'search_query': search_query,
@@ -289,6 +314,7 @@ def buyer_order_history(request):
         'items__seller',
         'items__seller_shipping_address',
         'items__return_request',
+        'items__review',
     ).select_related(
         'buyer_shipping_address',
         'payment_method',
@@ -471,4 +497,78 @@ def checkout_view(request):
 
     return render(request,'checkout.html', context)
 
-        
+
+@role_required('buyer')
+def create_review(request, order_item_id):
+	"""Create a new review for a completed order item."""
+	from .models import Review
+	from .forms import ReviewForm
+	
+	order_item = get_object_or_404(OrderItem, id=order_item_id, order__buyer=request.user, item_status='completed')
+	
+	# Check if review already exists
+	if hasattr(order_item, 'review'):
+		messages.info(request, 'You have already reviewed this item.')
+		return redirect('buyer_order_history')
+	
+	if request.method == 'POST':
+		form = ReviewForm(request.POST)
+		if form.is_valid():
+			review = form.save(commit=False)
+			review.order_item = order_item
+			review.buyer = request.user
+			review.product = order_item.product
+			review.save()
+			messages.success(request, 'Your review has been submitted and is pending approval.')
+			return redirect('buyer_order_history')
+	else:
+		form = ReviewForm()
+	
+	return render(request, 'review_form.html', {
+		'form': form,
+		'order_item': order_item,
+		'action': 'Create Review'
+	})
+
+
+@role_required('buyer')
+def edit_review(request, review_id):
+	"""Edit an existing review."""
+	from .models import Review
+	from .forms import ReviewForm
+	
+	review = get_object_or_404(Review, id=review_id, buyer=request.user)
+	
+	if request.method == 'POST':
+		form = ReviewForm(request.POST, instance=review)
+		if form.is_valid():
+			form.save()
+			messages.success(request, 'Your review has been updated.')
+			return redirect('buyer_order_history')
+	else:
+		form = ReviewForm(instance=review)
+	
+	return render(request, 'review_form.html', {
+		'form': form,
+		'review': review,
+		'action': 'Edit Review'
+	})
+
+
+@role_required('buyer')
+def buyer_delete_review(request, review_id):
+    review = get_object_or_404(Review, id=review_id, buyer=request.user)
+    
+    if request.method == 'POST':
+        product_name = review.product.product_name
+        review.delete()
+        messages.success(request, f'Your review for "{product_name}" has been deleted.')
+        return redirect('buyer_order_history')
+    
+    # Show confirmation page
+    context = {
+        'review': review,
+        'product_name': review.product.product_name,
+        'cancel_url': reverse('buyer_order_history'),
+    }
+    return render(request, 'review_delete_confirm.html', context)
