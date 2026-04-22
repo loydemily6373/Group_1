@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'buyers',
     'sellers.apps.SellersConfig',
     'admin.apps.ProjectAdminConfig',
+    'products.apps.ProductsConfig',
 ]
 
 MIDDLEWARE = [
