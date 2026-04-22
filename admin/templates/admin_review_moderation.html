@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Review Moderation - Admin Panel</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background-color: #f4f6f8;
+            color: #1f2937;
+        }
+
+        header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 15px 30px;
+        }
+
+        nav {
+            background-color: #34495e;
+            padding: 10px 30px;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            margin-right: 20px;
+            font-weight: bold;
+        }
+
+        nav a:hover {
+            text-decoration: underline;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 30px auto;
+            padding: 30px;
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .pending-badge {
+            background-color: #e74c3c;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-top: 30px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #3498db;
+        }
+
+        .review-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            border-left: 4px solid #3498db;
+        }
+
+        .review-card.pending {
+            border-left-color: #e74c3c;
+            background-color: #fef8f8;
+        }
+
+        .review-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .reviewer-info {
+            flex: 1;
+        }
+
+        .reviewer-name {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .review-meta {
+            font-size: 12px;
+            color: #666;
+            margin: 3px 0;
+        }
+
+        .review-rating {
+            color: #f39c12;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .status-badge {
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .status-pending {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        .status-approved {
+            background-color: #27ae60;
+            color: white;
+        }
+
+        .status-rejected {
+            background-color: #95a5a6;
+            color: white;
+        }
+
+        .review-title {
+            font-weight: bold;
+            color: #2c3e50;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        .review-comment {
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 12px;
+        }
+
+        .btn-approve {
+            background-color: #27ae60;
+            color: white;
+        }
+
+        .btn-approve:hover {
+            background-color: #229954;
+        }
+
+        .btn-reject {
+            background-color: #f39c12;
+            color: white;
+        }
+
+        .btn-reject:hover {
+            background-color: #d68910;
+        }
+
+        .btn-delete {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background-color: #c0392b;
+        }
+
+        .no-reviews {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            text-align: center;
+            color: #666;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        footer {
+            background-color: #2c3e50;
+            color: white;
+            text-align: center;
+            padding: 15px;
+            margin-top: 40px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>Review Moderation</h1>
+    </header>
+
+    <nav>
+        <a href="{% url 'admin_home' %}">Admin Home</a>
+        <a href="{% url 'product_requests' %}">Product Requests</a>
+        <a href="{% url 'seller_requests' %}">Seller Requests</a>
+        <a href="{% url 'review_moderation' %}">Reviews</a>
+        <a href="{% url 'account_logout' %}">Logout</a>
+    </nav>
+
+    <div class="container">
+        {% if pending_count > 0 %}
+            <h2>Pending Reviews <span class="pending-badge">{{ pending_count }}</span></h2>
+            
+            {% if pending_reviews %}
+                {% for review in pending_reviews %}
+                    <div class="review-card pending">
+                        <div class="review-header">
+                            <div class="reviewer-info">
+                                <div class="reviewer-name">{{ review.buyer.get_full_name|default:review.buyer.username }}</div>
+                                <div class="review-meta">Buyer: <strong>{{ review.buyer.email }}</strong></div>
+                                <div class="review-meta">Product: <strong>{{ review.product.product_name }}</strong></div>
+                                <div class="review-meta">Seller: <strong>{{ review.product.seller_id.username }}</strong></div>
+                                <div class="review-rating">
+                                    {% for star in "12345" %}
+                                        {% if forloop.counter <= review.rating %}★{% else %}☆{% endif %}
+                                    {% endfor %}
+                                    ({{ review.rating }} stars)
+                                </div>
+                                <div class="review-meta">Submitted: {{ review.created_at|date:"M d, Y H:i" }}</div>
+                            </div>
+                            <span class="status-badge status-pending">PENDING</span>
+                        </div>
+                        <div class="review-title">{{ review.title }}</div>
+                        <div class="review-comment">{{ review.comment }}</div>
+                        <div class="actions">
+                            <a href="{% url 'approve_review' review.id %}" class="btn btn-approve">Approve</a>
+                            <a href="{% url 'reject_review' review.id %}" class="btn btn-reject">Reject</a>
+                            <a href="{% url 'delete_review' review.id %}" class="btn btn-delete">Delete</a>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="no-reviews">
+                    <p>✓ No pending reviews. All reviews have been moderated.</p>
+                </div>
+            {% endif %}
+        {% endif %}
+
+        <h2 class="section-title">Approved Reviews</h2>
+        {% if approved_reviews %}
+            {% for review in approved_reviews %}
+                <div class="review-card">
+                    <div class="review-header">
+                        <div class="reviewer-info">
+                            <div class="reviewer-name">{{ review.buyer.get_full_name|default:review.buyer.username }}</div>
+                            <div class="review-meta">Product: <strong>{{ review.product.product_name }}</strong></div>
+                            <div class="review-meta">Seller: <strong>{{ review.product.seller_id.username }}</strong></div>
+                            <div class="review-rating">
+                                {% for star in "12345" %}
+                                    {% if forloop.counter <= review.rating %}★{% else %}☆{% endif %}
+                                {% endfor %}
+                                ({{ review.rating }} stars)
+                            </div>
+                            <div class="review-meta">Approved: {{ review.updated_at|date:"M d, Y H:i" }}</div>
+                        </div>
+                        <span class="status-badge status-approved">APPROVED</span>
+                    </div>
+                    <div class="review-title">{{ review.title }}</div>
+                    <div class="review-comment">{{ review.comment }}</div>
+                    <div class="actions">
+                        <a href="{% url 'delete_review' review.id %}" class="btn btn-delete">Delete</a>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="no-reviews">
+                <p>No approved reviews yet.</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <footer>
+        © 2026 ThreadSwitch
+    </footer>
+
+</body>
+</html>

@@ -18,4 +18,5 @@ urlpatterns = [
     path('webhooks/', views.webhook_settings, name='webhook_settings'),
     path('webhooks/toggle/', views.toggle_webhook, name='toggle_webhook'),
     path('notifications/<int:notification_id>/dismiss/', views.dismiss_notification, name='dismiss_notification'),
+    path('reviews/', views.seller_reviews, name='seller_reviews'),
 ]

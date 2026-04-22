@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ action }} - ThreadSwitch</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background-color: #f4f6f8;
+            color: #1f2937;
+        }
+
+        header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 15px 30px;
+        }
+
+        nav {
+            background-color: #34495e;
+            padding: 10px 30px;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            margin-right: 20px;
+            font-weight: bold;
+        }
+
+        nav a:hover {
+            text-decoration: underline;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 30px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+    
+
+        .product-info {
+            background-color: #f0f0f0;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+
+        .product-info p {
+            margin: 5px 0;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #2c3e50;
+        }
+
+        input[type="text"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: Arial, sans-serif;
+            box-sizing: border-box;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        input[type="text"]:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
+        }
+
+        .rating-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .rating-option {
+            display: flex;
+            align-items: center;
+        }
+
+        .rating-option input[type="radio"] {
+            width: auto;
+            margin-right: 10px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 30px;
+        }
+
+        button,
+        .cancel-link {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        button[type="submit"] {
+            background-color: #3498db;
+            color: white;
+            flex: 1;
+        }
+
+        button[type="submit"]:hover {
+            background-color: #2980b9;
+        }
+
+        .cancel-link {
+            background-color: #95a5a6;
+            color: white;
+            flex: 1;
+        }
+
+        .cancel-link:hover {
+            background-color: #7f8c8d;
+        }
+
+        footer {
+            background-color: #2c3e50;
+            color: white;
+            text-align: center;
+            padding: 15px;
+            margin-top: 40px;
+        }
+
+        .error-message {
+            background-color: #fee;
+            color: #c00;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            border-left: 4px solid #c00;
+        }
+
+        .errorlist {
+            color: #c00;
+            list-style: none;
+            padding-left: 0;
+            margin-bottom: 10px;
+        }
+
+        .errorlist li {
+            padding: 5px 0;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header><h1>{{ action }}</h1></header>
+
+    <nav>
+        <a href="{% url 'buyer_home' %}">Home</a>
+        <a href="{% url 'buyer_order_history' %}">Order History</a>
+        <a href="{% url 'buyer_return_requests' %}">Pending Returns</a>
+        <a href="{% url 'cart_view' %}">Cart</a>
+        <a href="{% url 'account_logout' %}">Logout</a>
+    </nav>
+    </nav>
+
+    <div class="container">
+        {% if order_item %}
+            <div class="product-info">
+                <p><strong>Product:</strong> {{ order_item.product_name }}</p>
+                <p><strong>Seller:</strong> {{ order_item.seller.username }}</p>
+                <p><strong>Order:</strong> {{ order_item.order.order_number }}</p>
+                <p><strong>Quantity:</strong> {{ order_item.quantity }}</p>
+                <p><strong>Price:</strong> ${{ order_item.unit_price }}</p>
+            </div>
+        {% endif %}
+
+        {% if review %}
+            <div class="product-info">
+                <p><strong>Product:</strong> {{ review.product.product_name }}</p>
+                <p><strong>Submitted:</strong> {{ review.created_at|date:"M d, Y H:i" }}</p>
+                <p><strong>Status:</strong> {{ review.status|title }}</p>
+            </div>
+        {% endif %}
+
+        {% if form.non_field_errors %}
+            <div class="error-message">
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
+
+        <form method="POST">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label>{{ form.rating.label }}</label>
+                {% if form.rating.errors %}
+                    <ul class="errorlist">
+                        {% for error in form.rating.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                <div class="rating-options">
+                    {% for value, label in form.rating.field.choices %}
+                        <div class="rating-option">
+                            <input type="radio" id="id_rating_{{ forloop.counter }}" name="rating" value="{{ value }}" {% if form.rating.value == value %}checked{% endif %}>
+                            <label for="id_rating_{{ forloop.counter }}">{{ label }}</label>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="id_title">{{ form.title.label }}</label>
+                {% if form.title.errors %}
+                    <ul class="errorlist">
+                        {% for error in form.title.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                {{ form.title }}
+            </div>
+
+            <div class="form-group">
+                <label for="id_comment">{{ form.comment.label }}</label>
+                {% if form.comment.errors %}
+                    <ul class="errorlist">
+                        {% for error in form.comment.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                {{ form.comment }}
+            </div>
+
+            <div class="button-group">
+                <button type="submit">{{ action }}</button>
+                <a href="{% url 'buyer_order_history' %}" class="cancel-link">Cancel</a>
+            </div>
+        </form>
+    </div>
+
+    <footer>
+        © 2026 ThreadSwitch
+    </footer>
+
+</body>
+</html>

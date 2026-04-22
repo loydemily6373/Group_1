@@ -142,3 +142,40 @@ class CartItem(models.Model):
 	def __str__(self):
 		return f"{self.buyer.username} - {self.product.product_name} ({self.quantity})"
 
+
+class Review(models.Model):
+	STATUS_CHOICES = [
+		('pending', 'Pending'),
+		('approved', 'Approved'),
+		('rejected', 'Rejected'),
+	]
+
+	RATING_CHOICES = [
+		(1, '1 - Poor'),
+		(2, '2 - Fair'),
+		(3, '3 - Good'),
+		(4, '4 - Very Good'),
+		(5, '5 - Excellent'),
+	]
+
+	# Reviews are tied to OrderItems so only buyers of the product can review it
+	order_item = models.OneToOneField(OrderItem, on_delete=models.CASCADE, related_name='review')
+	buyer = models.ForeignKey('accounts.User', on_delete=models.CASCADE, related_name='reviews')
+	product = models.ForeignKey('products.Product', on_delete=models.CASCADE, related_name='reviews')
+	rating = models.PositiveSmallIntegerField(choices=RATING_CHOICES)
+	title = models.CharField(max_length=200)
+	comment = models.TextField()
+	status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+	created_at = models.DateTimeField(auto_now_add=True)
+	updated_at = models.DateTimeField(auto_now=True)
+
+	class Meta:
+		ordering = ['-created_at']
+
+	def __str__(self):
+		return f"Review for {self.product.product_name} by {self.buyer.username} - {self.rating} stars"
+
+	@property
+	def is_approved(self):
+		return self.status == 'approved'
+
