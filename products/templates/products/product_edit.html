@@ -183,6 +183,24 @@
                 </div>
 
                 <div class="field">
+                    <label for="{{ form.discount_percentage.id_for_label }}">Discount (%)</label>
+                    {{ form.discount_percent }}
+                    {{ form.discount_percent.errors }}
+                </div>
+
+                <div class="field">
+                    <label for="{{ form.discount_start_date.id_for_label }}">Discount Start Date</label>
+                    {{ form.discount_start_date }}
+                    {{ form.discount_start_date.errors }}
+                </div>
+
+                <div class="field">
+                    <label for="{{ form.discount_end_date.id_for_label }}">Discount End Date</label>
+                    {{ form.discount_end_date }}
+                    {{ form.discount_end_date.errors }}
+                </div>
+                
+                <div class="field">
                     <label for="{{ form.stock.id_for_label }}">Stock Quantity</label>
                     {{ form.stock }}
                     {{ form.stock.errors }}
