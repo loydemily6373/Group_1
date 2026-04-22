@@ -347,6 +347,32 @@ def dismiss_notification(request, notification_id):
     return redirect('seller_home')
 
 
+@role_required('seller')
+def seller_reviews(request):
+    """View all reviews for the seller's products."""
+    from buyers.models import Review
+    
+    # Get all approved reviews for this seller's products
+    reviews = Review.objects.filter(
+        product__seller_id=request.user,
+        status='approved'
+    ).select_related('buyer', 'product').order_by('-created_at')
+    
+    # Calculate average rating
+    from django.db.models import Avg
+    avg_rating = Review.objects.filter(
+        product__seller_id=request.user,
+        status='approved'
+    ).aggregate(Avg('rating'))['rating__avg'] or 0
+    
+    context = {
+        'reviews': reviews,
+        'avg_rating': round(avg_rating, 1) if avg_rating else 0,
+        'total_reviews': reviews.count(),
+    }
+    return render(request, 'sellers/seller_reviews.html', context)
+
+
 def receive_order_webhook(request):
     """
     Receive webhook POST requests from the platform when orders are placed.
