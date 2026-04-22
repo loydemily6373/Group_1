@@ -470,7 +470,19 @@
                     {% endif %}
                     <h3>{{ product.product_name }}</h3>
                     <p>Category: {{ product.category }}</p>
-                    <p>Price: ${{ product.price }}</p>
+                    
+                    {% if product.is_discount_active %}
+                        <p style="color: #e53e3e;">
+                            {{ product.discount_percent }}% OFF! 
+                        </p>
+                
+                        <p>Price: <del>${{ product.price }}</del>
+                        <strong>${{ product.get_discounted_price }}</strong>
+                    </p>
+                    {% else %}
+                        <p>Price: ${{ product.price }}</p>
+                    {% endif %}
+
                     <p class="product-description">{{ product.description|truncatechars:90 }}</p>
                     {% if product.id in compare_list %}
                         <span class="compare-item-badge">✓ In Comparison</span>
@@ -505,7 +517,19 @@
                             <div class="modal-details">
                                 <p><strong>Name:</strong> {{ product.product_name }}</p>
                                 <p><strong>Description:</strong> {{ product.description }}</p>
-                                <p><strong>Price:</strong> ${{ product.price }}</p>
+                                
+                                {% if product.is_discount_active %}
+                                    <p style="color: #e53e3e;">
+                                        <strong>{{ product.discount_percent }}% OFF!</strong>
+                                    </p>
+                                    <p><strong>Price:</strong>
+                                        <del>${{ product.price }}</del>
+                                        <strong>${{ product.get_discounted_price }}</strong>
+                                    </p>
+                                {% else %}
+                                    <p><strong>Price:</strong> ${{ product.price }}</p>
+                                {% endif %}
+                            
                                 <p><strong>Category:</strong> {{ product.category }}</p>
                                 <p><strong>Stock:</strong> {{ product.stock }}</p>
                                 {% if product.id in compare_list %}
