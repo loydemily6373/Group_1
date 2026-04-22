@@ -207,8 +207,10 @@ class BuyerHomepageTests(TestCase):
 		response = self.client.get(reverse('buyer_home'))
 
 		self.assertEqual(response.status_code, 200)
+		# Products are now returned as dictionaries with product and review stats
+		products_in_context = [item['product'] for item in response.context['products']]
 		self.assertQuerySetEqual(
-			response.context['products'],
+			products_in_context,
 			[visible_product],
 			transform=lambda product: product,
 			ordered=False,

@@ -246,6 +246,18 @@
             margin-bottom: 0;
         }
 
+        .product-rating {
+            font-size: 13px;
+            color: #f59e0b;
+            margin: 2px 0;
+        }
+
+        .product-rating-count {
+            font-size: 11px;
+            color: #9ca3af;
+            margin: 2px 0;
+        }
+
         .product-description {
             color: #475569;
             flex-grow: 1;
@@ -411,8 +423,10 @@
     <nav>
         <a href="{% url 'buyer_home' %}">Home</a>
         <a href="{% url 'buyer_order_history' %}">Order History</a>
+        <a href="{% url 'buyer_return_requests' %}">Pending Returns</a>
         <a href="{% url 'cart_view' %}">Cart</a>
         <a href="{% url 'account_logout' %}">Logout</a>
+    </nav>
     </nav>
 
     <div class="container">
@@ -461,65 +475,103 @@
         {% endif %}
 
         <div class="product-list">
-            {% for product in products %}
+            {% for item in products %}
                 <div class="product-card">
-                    {% if product.image %}
-                        <img class="product-image" src="{{ product.image.url }}" alt="{{ product.product_name }}">
+                    {% if item.product.image %}
+                        <img class="product-image" src="{{ item.product.image.url }}" alt="{{ item.product.product_name }}">
                     {% else %}
                         <div class="product-image-placeholder">No Image Available</div>
                     {% endif %}
-                    <h3>{{ product.product_name }}</h3>
-                    <p>Category: {{ product.category }}</p>
-                    <p>Price: ${{ product.price }}</p>
-                    <p class="product-description">{{ product.description|truncatechars:90 }}</p>
-                    {% if product.id in compare_list %}
+                    <h3>{{ item.product.product_name }}</h3>
+                    {% if item.avg_rating %}
+                        <div class="product-rating">
+                            ★★★★★ {{ item.avg_rating|floatformat:1 }}
+                        </div>
+                        <div class="product-rating-count">
+                            ({{ item.review_count }} review{% if item.review_count != 1 %}s{% endif %})
+                        </div>
+                    {% else %}
+                        <div class="product-rating-count">No reviews yet</div>
+                    {% endif %}
+                    <p>Category: {{ item.product.category }}</p>
+                    <p>Price: ${{ item.product.price }}</p>
+                    <p class="product-description">{{ item.product.description|truncatechars:90 }}</p>
+                    {% if item.product.id in compare_list %}
                         <span class="compare-item-badge">✓ In Comparison</span>
                     {% endif %}
                     <div class="product-actions">
-                        <button type="button" class="view-details-btn" data-modal-target="product-modal-{{ product.id }}">View Details</button>
-                        <a class="add-to-cart-btn" href="{% url 'add_to_cart' product.id %}">Add to Cart</a>
+                        <button type="button" class="view-details-btn" data-modal-target="product-modal-{{ item.product.id }}">View Details</button>
+                        <a class="add-to-cart-btn" href="{% url 'add_to_cart' item.product.id %}">Add to Cart</a>
                     </div>
                     <div class="compare-actions-group">
-                        {% if product.id in compare_list %}
-                            <a href="{% url 'remove_from_compare' product.id %}" class="compare-remove-btn">Remove from Comparison</a>
+                        {% if item.product.id in compare_list %}
+                            <a href="{% url 'remove_from_compare' item.product.id %}" class="compare-remove-btn">Remove from Comparison</a>
                         {% else %}
-                            <a href="{% url 'add_to_compare' product.id %}" class="compare-add-btn">Add to Comparison</a>
+                            <a href="{% url 'add_to_compare' item.product.id %}" class="compare-add-btn">Add to Comparison</a>
                         {% endif %}
                     </div>
                 </div>
 
-                <div class="modal-overlay" id="product-modal-{{ product.id }}" aria-hidden="true">
-                    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="product-modal-title-{{ product.id }}">
+                <div class="modal-overlay" id="product-modal-{{ item.product.id }}" aria-hidden="true">
+                    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="product-modal-title-{{ item.product.id }}">
                         <div class="modal-header">
-                            <h2 id="product-modal-title-{{ product.id }}">{{ product.product_name }}</h2>
+                            <h2 id="product-modal-title-{{ item.product.id }}">{{ item.product.product_name }}</h2>
                             <button type="button" class="modal-close" data-modal-close aria-label="Close product details">&times;</button>
                         </div>
                         <div class="modal-content">
                             <div>
-                                {% if product.image %}
-                                    <img class="modal-image" src="{{ product.image.url }}" alt="{{ product.product_name }}">
+                                {% if item.product.image %}
+                                    <img class="modal-image" src="{{ item.product.image.url }}" alt="{{ item.product.product_name }}">
                                 {% else %}
                                     <div class="modal-image-placeholder">No Image Available</div>
                                 {% endif %}
                             </div>
                             <div class="modal-details">
-                                <p><strong>Name:</strong> {{ product.product_name }}</p>
-                                <p><strong>Description:</strong> {{ product.description }}</p>
-                                <p><strong>Price:</strong> ${{ product.price }}</p>
-                                <p><strong>Category:</strong> {{ product.category }}</p>
-                                <p><strong>Stock:</strong> {{ product.stock }}</p>
-                                {% if product.id in compare_list %}
+                                <p><strong>Name:</strong> {{ item.product.product_name }}</p>
+                                {% if item.avg_rating %}
+                                    <p><strong>Rating:</strong> ★★★★★ {{ item.avg_rating|floatformat:1 }} ({{ item.review_count }} review{% if item.review_count != 1 %}s{% endif %})</p>
+                                {% else %}
+                                    <p><strong>Reviews:</strong> No reviews yet</p>
+                                {% endif %}
+                                <p><strong>Description:</strong> {{ item.product.description }}</p>
+                                <p><strong>Price:</strong> ${{ item.product.price }}</p>
+                                <p><strong>Category:</strong> {{ item.product.category }}</p>
+                                <p><strong>Stock:</strong> {{ item.product.stock }}</p>
+                                {% if item.product.id in compare_list %}
                                     <p><span class="compare-item-badge">✓ In Comparison</span></p>
                                 {% endif %}
                                 <div class="product-actions">
-                                    <a class="add-to-cart-btn" href="{% url 'add_to_cart' product.id %}">Add to Cart</a>
-                                    {% if product.id in compare_list %}
-                                        <a href="{% url 'remove_from_compare' product.id %}" class="compare-remove-btn">Remove from Comparison</a>
+                                    <a class="add-to-cart-btn" href="{% url 'add_to_cart' item.product.id %}">Add to Cart</a>
+                                    {% if item.product.id in compare_list %}
+                                        <a href="{% url 'remove_from_compare' item.product.id %}" class="compare-remove-btn">Remove from Comparison</a>
                                     {% else %}
-                                        <a href="{% url 'add_to_compare' product.id %}" class="compare-add-btn">Add to Comparison</a>
+                                        <a href="{% url 'add_to_compare' item.product.id %}" class="compare-add-btn">Add to Comparison</a>
                                     {% endif %}
                                 </div>
                             </div>
+                        </div>
+                        
+                        <!-- Reviews Section -->
+                        <div class="modal-reviews" style="margin-top: 20px; border-top: 1px solid #e5e7eb; padding-top: 15px;">
+                            <h3>Customer Reviews</h3>
+                            {% if item.review_count > 0 %}
+                                {% for review in item.reviews %}
+                                    <div style="margin-bottom: 12px; padding: 10px; background: #f9fafb; border-radius: 4px; border-left: 3px solid #f59e0b;">
+                                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 5px;">
+                                            <strong style="color: #1f2937;">{{ review.buyer.username }}</strong>
+                                            <span style="color: #f59e0b; font-size: 13px;">★ {{ review.rating }}/5</span>
+                                        </div>
+                                        <p style="margin: 5px 0; color: #4b5563; font-weight: bold; font-size: 13px;">{{ review.title }}</p>
+                                        <p style="margin: 5px 0; color: #6b7280; font-size: 13px;">{{ review.comment|truncatechars:150 }}</p>
+                                        <span style="color: #9ca3af; font-size: 12px;">{{ review.created_at|date:"M d, Y" }}</span>
+                                    </div>
+                                {% endfor %}
+                                {% if item.review_count > 3 %}
+                                    <p style="color: #9ca3af; font-size: 13px; text-align: center; margin-top: 10px;">+ {{ item.review_count|add:"-3" }} more reviews</p>
+                                {% endif %}
+                            {% else %}
+                                <p style="color: #9ca3af;">No reviews yet. Be the first to review this product!</p>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
