@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>{% block title %}ThreadSwitch Admin{% endblock %}</title>
+
+    <script>
+        if (localStorage.getItem('darkMode') === 'enabled') {
+            document.documentElement.classList.add('dark-mode');
+        }
+    </script>
+
+    <style>
+        /* Sticky footer */
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        body > footer {
+            margin-top: auto;
+        }
+
+        .dark-mode body {
+            background-color: #0f172a;
+            color: #e2e8f0;
+        }
+
+        .dark-mode header,
+        .dark-mode nav,
+        .dark-mode footer {
+            background-color: #020617;
+        }
+
+        .dark-mode .product-card {
+            background: #1e293b;
+            color: #e2e8f0;
+        }
+
+        .dark-mode table {
+            background: #1e293b;
+            color: #e2e8f0;
+        }
+
+        .dark-mode th {
+            background: #1d4ed8;
+            color: #f8fafc;
+        }
+
+        .dark-mode td {
+            border-bottom-color: #334155;
+        }
+
+        .dark-mode tr:nth-child(even) {
+            background: #0f172a;
+        }
+
+        .dark-mode tr:hover {
+            background: #273549;
+        }
+
+        .dark-mode .summary-card,
+        .dark-mode .review-card,
+        .dark-mode .empty-state,
+        .dark-mode .no-reviews {
+            background: #1e293b;
+            color: #e2e8f0;
+        }
+
+        .dark-mode .review-card.pending {
+            background: #2d1f1f;
+            border-left-color: #e74c3c;
+        }
+
+        .dark-mode .review-comment {
+            background: #0f172a;
+            color: #cbd5e1;
+        }
+
+        .dark-mode .reviewer-name,
+        .dark-mode .review-title,
+        .dark-mode h1,
+        .dark-mode .section-title {
+            color: #e2e8f0;
+        }
+
+        .dark-mode .review-meta {
+            color: #94a3b8;
+        }
+    </style>
+
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+<button id="darkModeToggle"
+        style="position: fixed; top: 15px; right: 15px; font-size: 1.5rem;
+               background: none; border: none; cursor: pointer; z-index: 9999;">
+    🌙
+</button>
+
+{% block content %}{% endblock %}
+
+<script>
+const darkModeToggle = document.getElementById('darkModeToggle');
+
+if (localStorage.getItem('darkMode') === 'enabled') {
+    darkModeToggle.textContent = '☀️';
+} else {
+    darkModeToggle.textContent = '🌙';
+}
+
+darkModeToggle.addEventListener('click', () => {
+    document.documentElement.classList.toggle('dark-mode');
+
+    if (document.documentElement.classList.contains('dark-mode')) {
+        localStorage.setItem('darkMode', 'enabled');
+        darkModeToggle.textContent = '☀️';
+    } else {
+        localStorage.setItem('darkMode', 'disabled');
+        darkModeToggle.textContent = '🌙';
+    }
+});
+</script>
+
+{% block extra_js %}{% endblock %}
+
+</body>
+</html>

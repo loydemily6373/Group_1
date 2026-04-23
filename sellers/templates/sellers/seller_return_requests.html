@@ -1,90 +1,98 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <title>Seller Pending Returns</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            background-color: #f4f6f8;
-        }
+{% extends "sellers/base.html" %}
 
-        header {
-            background-color: #2c3e50;
-            color: white;
-            padding: 15px 30px;
-        }
+{% block title %}Pending Return Requests - ThreadSwitch{% endblock %}
 
-        nav {
-            background-color: #34495e;
-            padding: 10px 30px;
-        }
+{% block extra_css %}
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        background-color: #f4f6f8;
+    }
 
-        nav a {
-            color: white;
-            text-decoration: none;
-            margin-right: 20px;
-            font-weight: bold;
-        }
+    header {
+        background-color: #2c3e50;
+        color: white;
+        padding: 15px 30px;
+    }
 
-        .container {
-            padding: 30px;
-            max-width: 1100px;
-            margin: 0 auto;
-        }
+    nav {
+        background-color: #34495e;
+        padding: 10px 30px;
+    }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background: white;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
+    nav a {
+        color: white;
+        text-decoration: none;
+        margin-right: 20px;
+        font-weight: bold;
+    }
 
-        th, td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #e2e8f0;
-        }
+    nav a:hover {
+        text-decoration: underline;
+    }
 
-        th {
-            background: #3498db;
-            color: white;
-        }
+    .container {
+        padding: 30px;
+        max-width: 1100px;
+        margin: 0 auto;
+    }
 
-        .actions {
-            display: flex;
-            gap: 8px;
-        }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
 
-        .actions button {
-            border: none;
-            color: white;
-            padding: 8px 10px;
-            border-radius: 4px;
-            cursor: pointer;
-        }
+    th, td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid #e2e8f0;
+    }
 
-        .approve {
-            background: #27ae60;
-        }
+    th {
+        background: #3498db;
+        color: white;
+    }
 
-        .reject {
-            background: #c0392b;
-        }
-    </style>
-</head>
-<body>
+    .actions {
+        display: flex;
+        gap: 8px;
+    }
+
+    .actions button {
+        border: none;
+        color: white;
+        padding: 8px 10px;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .approve { background: #27ae60; }
+    .reject  { background: #c0392b; }
+
+    footer {
+        background-color: #2c3e50;
+        color: white;
+        text-align: center;
+        padding: 15px;
+        margin-top: 40px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
     <header>
         <h1>Pending Return Requests</h1>
     </header>
 
     <nav>
         <a href="{% url 'seller_home' %}">Home</a>
-        <a href="{% url 'product_list' %}">My Listings</a>
         <a href="{% url 'product_creation' %}">Add Product</a>
         <a href="{% url 'seller_order_history' %}">Order History</a>
         <a href="{% url 'seller_return_requests' %}">Pending Returns</a>
+        <a href="{% url 'seller_reviews' %}">Reviews</a>
         <a href="{% url 'seller_shipping_address' %}">Shipping Address</a>
         <a href="{% url 'webhook_settings' %}">Webhook Settings</a>
         <a href="{% url 'account_logout' %}">Logout</a>
@@ -137,5 +145,8 @@
             </tbody>
         </table>
     </div>
-</body>
-</html>
+
+    <footer>
+        © 2026 ThreadSwitch
+    </footer>
+{% endblock %}

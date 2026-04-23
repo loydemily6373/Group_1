@@ -1,169 +1,164 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Product Reviews - ThreadSwitch</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            background-color: #f4f6f8;
-            color: #1f2937;
-        }
+{% extends "sellers/base.html" %}
 
-        header {
-            background-color: #2c3e50;
-            color: white;
-            padding: 15px 30px;
-        }
+{% block title %}Product Reviews - ThreadSwitch{% endblock %}
 
-        nav {
-            background-color: #34495e;
-            padding: 10px 30px;
-        }
+{% block extra_css %}
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        background-color: #f4f6f8;
+        color: #1f2937;
+    }
 
-        nav a {
-            color: white;
-            text-decoration: none;
-            margin-right: 20px;
-            font-weight: bold;
-        }
+    header {
+        background-color: #2c3e50;
+        color: white;
+        padding: 15px 30px;
+    }
 
-        nav a:hover {
-            text-decoration: underline;
-        }
+    nav {
+        background-color: #34495e;
+        padding: 10px 30px;
+    }
 
-        .container {
-            max-width: 900px;
-            margin: 30px auto;
-            padding: 30px;
-        }
+    nav a {
+        color: white;
+        text-decoration: none;
+        margin-right: 20px;
+        font-weight: bold;
+    }
 
-        
+    nav a:hover {
+        text-decoration: underline;
+    }
 
-        .stats {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            display: flex;
-            gap: 30px;
-            align-items: center;
-        }
+    .container {
+        max-width: 900px;
+        margin: 30px auto;
+        padding: 30px;
+    }
 
-        .stat-item {
-            text-align: center;
-        }
+    .stats {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        display: flex;
+        gap: 30px;
+        align-items: center;
+    }
 
-        .stat-number {
-            font-size: 32px;
-            font-weight: bold;
-            color: #3498db;
-        }
+    .stat-item {
+        text-align: center;
+    }
 
-        .stat-label {
-            color: #666;
-            font-size: 14px;
-            margin-top: 5px;
-        }
+    .stat-number {
+        font-size: 32px;
+        font-weight: bold;
+        color: #3498db;
+    }
 
-        .stars {
-            display: inline-block;
-            color: #f39c12;
-            font-size: 18px;
-        }
+    .stat-label {
+        color: #666;
+        font-size: 14px;
+        margin-top: 5px;
+    }
 
-        .no-reviews {
-            background: white;
-            padding: 30px;
-            border-radius: 8px;
-            text-align: center;
-            color: #666;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
+    .review-rating {
+        color: #f39c12;
+        font-size: 16px;
+        margin-bottom: 5px;
+    }
 
-        .reviews-list {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
+    .no-reviews {
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        text-align: center;
+        color: #666;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
 
-        .review-card {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            border-left: 4px solid #3498db;
-        }
+    .reviews-list {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
 
-        .review-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 15px;
-        }
+    .review-card {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        border-left: 4px solid #3498db;
+    }
 
-        .reviewer-info {
-            flex: 1;
-        }
+    .review-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 15px;
+    }
 
-        .reviewer-name {
-            font-weight: bold;
-            color: #2c3e50;
-            margin-bottom: 5px;
-        }
+    .reviewer-info {
+        flex: 1;
+    }
 
-        .review-rating {
-            color: #f39c12;
-            font-size: 16px;
-            margin-bottom: 5px;
-        }
+    .reviewer-name {
+        font-weight: bold;
+        color: #2c3e50;
+        margin-bottom: 5px;
+    }
 
-        .review-date {
-            font-size: 12px;
-            color: #999;
-        }
+    .review-date {
+        font-size: 12px;
+        color: #999;
+    }
 
-        .product-name {
-            font-size: 12px;
-            color: #666;
-            margin-top: 3px;
-        }
+    .product-name {
+        font-size: 12px;
+        color: #666;
+        margin-top: 3px;
+    }
 
-        .review-title {
-            font-weight: bold;
-            color: #2c3e50;
-            font-size: 16px;
-            margin-bottom: 10px;
-        }
+    .review-title {
+        font-weight: bold;
+        color: #2c3e50;
+        font-size: 16px;
+        margin-bottom: 10px;
+    }
 
-        .review-comment {
-            color: #555;
-            line-height: 1.6;
-            margin-bottom: 10px;
-        }
+    .review-comment {
+        color: #555;
+        line-height: 1.6;
+        margin-bottom: 10px;
+    }
 
-        footer {
-            background-color: #2c3e50;
-            color: white;
-            text-align: center;
-            padding: 15px;
-            margin-top: 40px;
-        }
-    </style>
-</head>
+    footer {
+        background-color: #2c3e50;
+        color: white;
+        text-align: center;
+        padding: 15px;
+        margin-top: 40px;
+    }
+</style>
+{% endblock %}
 
-<body>
-
+{% block content %}
     <header>
         <h1>Product Reviews</h1>
     </header>
 
     <nav>
         <a href="{% url 'seller_home' %}">Home</a>
-        <a href="{% url 'product_list' %}">My Listings</a>
-        <a href="{% url 'seller_order_history' %}">Orders</a>
+        <a href="{% url 'product_creation' %}">Add Product</a>
+        <a href="{% url 'seller_order_history' %}">Order History</a>
+        <a href="{% url 'seller_return_requests' %}">Pending Returns</a>
         <a href="{% url 'seller_reviews' %}">Reviews</a>
+        <a href="{% url 'seller_shipping_address' %}">Shipping Address</a>
+        <a href="{% url 'webhook_settings' %}">Webhook Settings</a>
         <a href="{% url 'account_logout' %}">Logout</a>
     </nav>
 
@@ -210,7 +205,7 @@
             </div>
         {% else %}
             <div class="no-reviews">
-                <p>📝 No reviews yet. Your customers can leave reviews after completing their orders.</p>
+                <p>No reviews yet. Your customers can leave reviews after completing their orders.</p>
             </div>
         {% endif %}
     </div>
@@ -218,6 +213,4 @@
     <footer>
         © 2026 ThreadSwitch
     </footer>
-
-</body>
-</html>
+{% endblock %}

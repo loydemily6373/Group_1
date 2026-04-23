@@ -1,153 +1,212 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Seller Home</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            background-color: #f4f6f8;
-        }
+{% extends "sellers/base.html" %}
 
-        header {
-            background-color: #2c3e50;
-            color: white;
-            padding: 15px 30px;
-        }
+{% block title %}Seller Home - ThreadSwitch{% endblock %}
 
-        nav {
-            background-color: #34495e;
-            padding: 10px 30px;
-        }
+{% block extra_css %}
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        background-color: #f4f6f8;
+    }
 
-        nav a {
-            color: white;
-            text-decoration: none;
-            margin-right: 20px;
-            font-weight: bold;
-        }
+    header {
+        background-color: #2c3e50;
+        color: white;
+        padding: 15px 30px;
+    }
 
-        nav a:hover {
-            text-decoration: underline;
-        }
+    nav {
+        background-color: #34495e;
+        padding: 10px 30px;
+    }
 
-        .container {
-            padding: 30px;
-        }
+    nav a {
+        color: white;
+        text-decoration: none;
+        margin-right: 20px;
+        font-weight: bold;
+    }
 
-        .dashboard {
-            display: flex;
-            gap: 20px;
-            flex-wrap: wrap;
-            margin-top: 20px;
-        }
+    nav a:hover {
+        text-decoration: underline;
+    }
 
-        .card {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            width: 240px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
+    .container {
+        padding: 30px;
+    }
 
-        .card h3 {
-            margin-top: 0;
-        }
+    .top-actions {
+        margin-bottom: 20px;
+    }
 
-        .button-link {
-            display: inline-block;
-            background-color: #3498db;
-            color: white;
-            text-decoration: none;
-            padding: 10px 12px;
-            border-radius: 6px;
-            margin-top: 10px;
-            font-weight: bold;
-        }
+    .add-btn {
+        display: inline-block;
+        padding: 10px 15px;
+        background-color: #27ae60;
+        color: white;
+        text-decoration: none;
+        border-radius: 4px;
+        font-weight: bold;
+    }
 
-        .button-link:hover {
-            opacity: 0.9;
-        }
+    .add-btn:hover {
+        background-color: #219150;
+    }
 
-        footer {
-            background-color: #2c3e50;
-            color: white;
-            text-align: center;
-            padding: 15px;
-            margin-top: 40px;
-        }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
 
-        .notification {
-            background-color: #e8f4f8;
-            border-left: 5px solid #3498db;
-            padding: 15px;
-            margin-bottom: 15px;
-            border-radius: 4px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+    th, td {
+        padding: 12px;
+        text-align: left;
+    }
 
-        .notification-content {
-            flex-grow: 1;
-        }
+    th {
+        background-color: #3498db;
+        color: white;
+    }
 
-        .notification-content strong {
-            display: block;
-            color: #2c3e50;
-            margin-bottom: 5px;
-        }
+    tr:nth-child(even) {
+        background-color: #f2f2f2;
+    }
 
-        .notification-content small {
-            color: #666;
-        }
+    .edit-btn,
+    .delete-btn {
+        display: inline-block;
+        padding: 6px 10px;
+        border: none;
+        cursor: pointer;
+        border-radius: 4px;
+        margin-right: 5px;
+        text-decoration: none;
+        color: white;
+        font-size: 14px;
+    }
 
-        .notification-dismiss {
-            background-color: #95a5a6;
-            color: white;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-            margin-left: 15px;
-        }
+    .edit-btn     { background-color: #f39c12; }
+    .delete-btn   { background-color: #e74c3c; }
+    .discount-btn { background-color: #8e44ad; }
+    .remove-discount-btn { background-color: #95a5a6; }
 
-        .notification-dismiss:hover {
-            background-color: #7f8c8d;
-        }
+    .price-original {
+        text-decoration: line-through;
+        color: #9ca3af;
+        margin-right: 4px;
+    }
 
-        .notifications-container {
-            margin-bottom: 20px;
-        }
-    </style>
-</head>
+    .price-discounted {
+        color: #16a34a;
+        font-weight: bold;
+    }
 
-<body>
+    .discount-badge {
+        display: inline-block;
+        background: #dc2626;
+        color: white;
+        font-size: 0.75rem;
+        font-weight: bold;
+        padding: 2px 7px;
+        border-radius: 4px;
+        margin-left: 4px;
+        vertical-align: middle;
+    }
 
+    .discount-scheduled {
+        color: #f39c12;
+        font-weight: bold;
+    }
+
+    .alert-card {
+        background: white;
+        padding: 16px 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+        border-left: 5px solid #f39c12;
+    }
+
+    .alert-card a {
+        color: #3498db;
+        font-weight: bold;
+    }
+
+    .notification {
+        background-color: #e8f4f8;
+        border-left: 5px solid #3498db;
+        padding: 15px;
+        margin-bottom: 12px;
+        border-radius: 4px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .notification-content strong {
+        display: block;
+        color: #2c3e50;
+        margin-bottom: 4px;
+    }
+
+    .notification-content small {
+        color: #666;
+    }
+
+    .notification-dismiss {
+        background-color: #95a5a6;
+        color: white;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: bold;
+        margin-left: 15px;
+        white-space: nowrap;
+    }
+
+    .notification-dismiss:hover {
+        background-color: #7f8c8d;
+    }
+
+    .notifications-container {
+        margin-bottom: 20px;
+    }
+
+    footer {
+        background-color: #2c3e50;
+        color: white;
+        text-align: center;
+        padding: 15px;
+        margin-top: 40px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
     <header>
         <h1>Welcome, Seller!</h1>
     </header>
 
     <nav>
         <a href="{% url 'seller_home' %}">Home</a>
-        <a href="{% url 'product_list' %}">My Listings</a>
         <a href="{% url 'product_creation' %}">Add Product</a>
         <a href="{% url 'seller_order_history' %}">Order History</a>
         <a href="{% url 'seller_return_requests' %}">Pending Returns</a>
         <a href="{% url 'seller_reviews' %}">Reviews</a>
-        <a href="{% url 'manage_product_discounts' %}">Manage Discounts</a>
         <a href="{% url 'seller_shipping_address' %}">Shipping Address</a>
         <a href="{% url 'webhook_settings' %}">Webhook Settings</a>
         <a href="{% url 'account_logout' %}">Logout</a>
-    
     </nav>
 
     <div class="container">
 
         {% if unseen_notifications %}
             <div class="notifications-container">
-                <h3>📬 New Notifications</h3>
+                <h3>New Notifications</h3>
                 {% for notification in unseen_notifications %}
                     <div class="notification">
                         <div class="notification-content">
@@ -164,53 +223,69 @@
         {% endif %}
 
         {% if not has_default_shipping_address %}
-            <div class="card" style="width: 100%; border-left: 5px solid #f39c12;">
-                <h3>Shipping Address Needed</h3>
-                <p>Add a default seller shipping address so buyer checkout can include your products without being blocked.</p>
-                <a class="button-link" href="{% url 'seller_shipping_address' %}">Add Shipping Address</a>
+            <div class="alert-card">
+                <strong>Shipping Address Needed</strong>
+                <p style="margin: 6px 0 0;">Buyers cannot check out your products until you add a default shipping address. <a href="{% url 'seller_shipping_address' %}">Add one now</a>.</p>
             </div>
         {% endif %}
 
-        <h2>Seller Dashboard</h2>
-
-        <div class="dashboard">
-            <div class="card">
-                <h3>My Product List</h3>
-                <p>View, edit, or remove products you’re selling.</p>
-                <a class="button-link" href="{% url 'product_list' %}">View Products</a>
-            </div>
-
-            <div class="card">
-                <h3>Create New Product</h3>
-                <p>Add a new item and publish it to the marketplace.</p>
-                <a class="button-link" href="{% url 'product_creation' %}">Add Product</a>
-            </div>
-
-            <div class="card">
-                <h3>Seller Shipping Address</h3>
-                <p>Update the saved ship-from address that checkout uses for your order items.</p>
-                <a class="button-link" href="{% url 'seller_shipping_address' %}">Manage Address</a>
-            </div>
-
-            <div class="card">
-                <h3>Order History</h3>
-                <p>Review buyer orders that include your products.</p>
-                <a class="button-link" href="{% url 'seller_order_history' %}">View Orders</a>
-            </div>
-
-            <div class="card">
-                <h3>Webhook Settings</h3>
-                <p>Manage order notification webhooks and view your webhook URL.</p>
-                <a class="button-link" href="{% url 'webhook_settings' %}">Manage Webhooks</a>
-            </div>
-
+        <div class="top-actions">
+            <a href="{% url 'product_creation' %}" class="add-btn">Add New Product</a>
         </div>
+
+        <table>
+            <tr>
+                <th>Product ID</th>
+                <th>Product Name</th>
+                <th>Price</th>
+                <th>Discount</th>
+                <th>Stock</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+
+            {% for product in products %}
+            <tr>
+                <td>#P{{ product.id }}</td>
+                <td>{{ product.product_name }}</td>
+                <td>${{ product.price }}</td>
+                <td>
+                    {% if product.discount_percent %}
+                        {% if product.is_discount_active %}
+                            <span class="price-original">${{ product.price }}</span>
+                            <span class="price-discounted">${{ product.get_discounted_price }}</span>
+                            <span class="discount-badge">{{ product.discount_percent|floatformat:0 }}% OFF</span>
+                        {% else %}
+                            ${{ product.price }}<br>
+                            <span class="discount-scheduled">{{ product.discount_percent|floatformat:0 }}% (scheduled)</span>
+                        {% endif %}
+                    {% else %}
+                        —
+                    {% endif %}
+                </td>
+                <td>{{ product.stock }}</td>
+                <td>{{ product.status }}</td>
+                <td>
+                    <a href="{% url 'product_edit' product.id %}" class="edit-btn">Edit</a>
+                    <a href="{% url 'product_delete' product.id %}" class="delete-btn">Delete</a>
+                    {% if product.discount_percent %}
+                        <a href="{% url 'apply_discount' product.id %}?next=seller_home" class="edit-btn discount-btn">Edit Discount</a>
+                        <a href="{% url 'remove_discount' product.id %}?next=seller_home" class="delete-btn remove-discount-btn">Remove Discount</a>
+                    {% else %}
+                        <a href="{% url 'apply_discount' product.id %}?next=seller_home" class="edit-btn discount-btn">Add Discount</a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7">No products yet. <a href="{% url 'product_creation' %}" style="color: #3498db;">Add your first product.</a></td>
+            </tr>
+            {% endfor %}
+        </table>
 
     </div>
 
     <footer>
         © 2026 ThreadSwitch
     </footer>
-
-</body>
-</html>
+{% endblock %}
