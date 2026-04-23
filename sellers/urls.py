@@ -19,4 +19,7 @@ urlpatterns = [
     path('webhooks/toggle/', views.toggle_webhook, name='toggle_webhook'),
     path('notifications/<int:notification_id>/dismiss/', views.dismiss_notification, name='dismiss_notification'),
     path('reviews/', views.seller_reviews, name='seller_reviews'),
+    path('discounts/', views.manage_product_discounts, name='manage_product_discounts'),
+    path('discounts/<int:product_id>/apply/', views.apply_discount, name='apply_discount'),
+    path('discounts/<int:product_id>/remove/', views.remove_discount, name='remove_discount'),
 ]

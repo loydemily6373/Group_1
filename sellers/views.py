@@ -348,6 +348,69 @@ def dismiss_notification(request, notification_id):
 
 
 @role_required('seller')
+def manage_product_discounts(request):
+    """Display all seller's products with discount management options."""
+    products = Product.objects.filter(seller_id=request.user, deleted_at__isnull=True).order_by('product_name')
+    
+    context = {
+        'products': products,
+    }
+    return render(request, 'sellers/manage_discounts.html', context)
+
+
+@role_required('seller')
+def apply_discount(request, product_id):
+    """Apply or edit discount for a product."""
+    from .forms import DiscountForm
+    
+    product = get_object_or_404(Product, id=product_id, seller_id=request.user, deleted_at__isnull=True)
+    
+    next_url = request.GET.get('next') or request.POST.get('next') or 'manage_product_discounts'
+    if next_url not in ('manage_product_discounts', 'product_list'):
+        next_url = 'manage_product_discounts'
+
+    if request.method == 'POST':
+        form = DiscountForm(request.POST, instance=product)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f'Discount applied to "{product.product_name}" successfully.')
+            return redirect(next_url)
+    else:
+        form = DiscountForm(instance=product)
+
+    context = {
+        'form': form,
+        'product': product,
+        'next': next_url,
+    }
+    return render(request, 'sellers/apply_discount.html', context)
+
+
+@role_required('seller')
+def remove_discount(request, product_id):
+    """Remove discount from a product."""
+    product = get_object_or_404(Product, id=product_id, seller_id=request.user, deleted_at__isnull=True)
+
+    next_url = request.GET.get('next') or request.POST.get('next') or 'manage_product_discounts'
+    if next_url not in ('manage_product_discounts', 'product_list'):
+        next_url = 'manage_product_discounts'
+
+    if request.method == 'POST':
+        product.discount_percent = None
+        product.discount_start_date = None
+        product.discount_end_date = None
+        product.save(update_fields=['discount_percent', 'discount_start_date', 'discount_end_date'])
+        messages.success(request, f'Discount removed from "{product.product_name}".')
+        return redirect(next_url)
+
+    context = {
+        'product': product,
+        'next': next_url,
+    }
+    return render(request, 'sellers/remove_discount_confirm.html', context)
+
+
+@role_required('seller')
 def seller_reviews(request):
     """View all reviews for the seller's products."""
     from buyers.models import Review
