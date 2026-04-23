@@ -1,151 +1,78 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Edit Product</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            background-color: #f4f6f8;
-        }
+{% extends "sellers/base.html" %}
 
-        header {
-            background-color: #2c3e50;
-            color: white;
-            padding: 15px 30px;
-        }
+{% block title %}Edit Product - ThreadSwitch{% endblock %}
 
-        nav {
-            background-color: #34495e;
-            padding: 10px 30px;
-        }
+{% block extra_css %}
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        background-color: #f4f6f8;
+    }
 
-        nav a {
-            color: white;
-            text-decoration: none;
-            margin-right: 20px;
-            font-weight: bold;
-        }
+    header {
+        background-color: #2c3e50;
+        color: white;
+        padding: 15px 30px;
+    }
 
-        nav a:hover {
-            text-decoration: underline;
-        }
+    nav {
+        background-color: #34495e;
+        padding: 10px 30px;
+    }
 
-        .container {
-            padding: 30px;
-            max-width: 900px;
-            margin: 0 auto;
-        }
+    nav a {
+        color: white;
+        text-decoration: none;
+        margin-right: 20px;
+        font-weight: bold;
+    }
 
-        .form-card {
-            background: white;
-            padding: 22px;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
+    nav a:hover {
+        text-decoration: underline;
+    }
 
-        .form-card h2 {
-            margin-top: 0;
-        }
+    .container {
+        padding: 30px;
+        max-width: 900px;
+        margin: 0 auto;
+    }
 
-        .field {
-            margin-bottom: 14px;
-        }
+    .current-image {
+        width: 180px;
+        border-radius: 8px;
+        display: block;
+        margin-bottom: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
 
-        label {
-            display: block;
-            font-weight: bold;
-            margin-bottom: 6px;
-            color: #2c3e50;
-        }
+    footer {
+        background-color: #2c3e50;
+        color: white;
+        text-align: center;
+        padding: 15px;
+        margin-top: 40px;
+    }
+</style>
+{% endblock %}
 
-        input, select, textarea {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ccd5dd;
-            border-radius: 6px;
-            box-sizing: border-box;
-            background: #fff;
-        }
-
-        textarea {
-            min-height: 110px;
-            resize: vertical;
-        }
-
-        .actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 12px;
-            flex-wrap: wrap;
-        }
-
-        .current-image {
-            width: 180px;
-            border-radius: 8px;
-            display: block;
-            margin-bottom: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-
-        .helptext {
-            display: block;
-            margin-top: 6px;
-            color: #6b7280;
-            font-size: 0.9rem;
-        }
-
-        .btn {
-            padding: 10px 14px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: bold;
-            text-decoration: none;
-            color: white;
-        }
-
-        .btn-primary {
-            background-color: #27ae60;
-        }
-
-        .btn-secondary {
-            background-color: #3498db;
-        }
-
-        .btn:hover {
-            opacity: 0.92;
-        }
-
-        footer {
-            background-color: #2c3e50;
-            color: white;
-            text-align: center;
-            padding: 15px;
-            margin-top: 40px;
-        }
-    </style>
-</head>
-
-<body>
-
+{% block content %}
     <header>
         <h1>Edit Product</h1>
     </header>
 
     <nav>
         <a href="{% url 'seller_home' %}">Home</a>
-        <a href="{% url 'product_list' %}">My Listings</a>
-        <a href="{% url 'seller_order_history' %}">Order History</a>
-        <a href="{% url 'seller_shipping_address' %}">Shipping Address</a>
-        <a href="{% url 'account_logout' %}">Logout</a>
-        <a href="{% url 'product_list' %}">My Listings</a>
         <a href="{% url 'product_creation' %}">Add Product</a>
-        
+        <a href="{% url 'seller_order_history' %}">Order History</a>
+        <a href="{% url 'seller_return_requests' %}">Pending Returns</a>
+        <a href="{% url 'seller_reviews' %}">Reviews</a>
+        <a href="{% url 'seller_shipping_address' %}">Shipping Address</a>
+        <a href="{% url 'webhook_settings' %}">Webhook Settings</a>
+        <a href="{% url 'account_logout' %}">Logout</a>
     </nav>
 
     <div class="container">
-
         <div class="form-card">
             <h2>Edit {{ product.product_name }}</h2>
 
@@ -196,16 +123,13 @@
 
                 <div class="actions">
                     <button class="btn btn-primary" type="submit">Save Changes</button>
-                    <a class="btn btn-secondary" href="{% url 'product_list' %}">Cancel</a>
+                    <a class="btn btn-secondary" href="{% url 'seller_home' %}">Cancel</a>
                 </div>
             </form>
         </div>
-
     </div>
 
     <footer>
         © 2026 ThreadSwitch
     </footer>
-
-</body>
-</html>
+{% endblock %}

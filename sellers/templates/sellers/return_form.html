@@ -1,73 +1,83 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Request Return</title>
+{% extends "sellers/base.html" %}
 
-    <style>
-        body {
-            font-family: Arial;
-            margin: 0;
-            background-color: #f4f6f8;
-        }
+{% block title %}Request Return - ThreadSwitch{% endblock %}
 
-        header {
-            background-color: #2c3e50;
-            color: white;
-            padding: 15px 30px;
-        }
+{% block extra_css %}
+<style>
+    body {
+        font-family: Arial;
+        margin: 0;
+        background-color: #f4f6f8;
+    }
 
-        .container {
-            width: 400px;
-            margin: 80px auto;
-            background: white;
-            padding: 25px;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-        }
+    header {
+        background-color: #2c3e50;
+        color: white;
+        padding: 15px 30px;
+    }
 
-        textarea {
-            width: 100%;
-            height: 100px;
-        }
+    .container {
+        width: 400px;
+        margin: 80px auto;
+        background: white;
+        padding: 25px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
 
-        button {
-            padding: 8px 12px;
-            background: #3498db;
-            color: white;
-            border: none;
-            margin-top: 10px;
-            cursor: pointer;
-        }
+    textarea {
+        width: 100%;
+        height: 100px;
+        box-sizing: border-box;
+    }
 
-        a {
-            display: inline-block;
-            margin-top: 10px;
-        }
-    </style>
-</head>
+    button {
+        padding: 8px 12px;
+        background: #3498db;
+        color: white;
+        border: none;
+        margin-top: 10px;
+        cursor: pointer;
+        border-radius: 4px;
+    }
 
-<body>
+    a {
+        display: inline-block;
+        margin-top: 10px;
+        color: #3498db;
+    }
 
-<header>
-    <h2>Request Return</h2>
-</header>
+    footer {
+        background-color: #2c3e50;
+        color: white;
+        text-align: center;
+        padding: 15px;
+        margin-top: 40px;
+    }
+</style>
+{% endblock %}
 
-<div class="container">
-    <h3>Order #{{ order_item.order.order_number }}</h3>
-    <p><strong>Item:</strong> {{ order_item.product_name }}</p>
-    <p><strong>Seller:</strong> {{ order_item.seller.username }}</p>
+{% block content %}
+    <header>
+        <h2>Request Return</h2>
+    </header>
 
-    <form method="POST">
-        {% csrf_token %}
+    <div class="container">
+        <h3>Order #{{ order_item.order.order_number }}</h3>
+        <p><strong>Item:</strong> {{ order_item.product_name }}</p>
+        <p><strong>Seller:</strong> {{ order_item.seller.username }}</p>
 
-        <label>Reason for return:</label><br>
-        <textarea name="reason" required></textarea><br>
+        <form method="POST">
+            {% csrf_token %}
+            <label>Reason for return:</label><br>
+            <textarea name="reason" required></textarea><br>
+            <button type="submit">Submit Request</button>
+        </form>
 
-        <button type="submit">Submit Request</button>
-    </form>
+        <a href="{% url 'buyer_order_history' %}">Cancel</a>
+    </div>
 
-    <a href="{% url 'buyer_order_history' %}">Cancel</a>
-</div>
-
-</body>
-</html>
+    <footer>
+        © 2026 ThreadSwitch
+    </footer>
+{% endblock %}

@@ -33,15 +33,16 @@ def _update_parent_order_status(order):
 
 @role_required('seller')
 def seller_home(request):
-    # Seller pages now require the logged-in user to have the seller role.
     from .models import Notification
-    
+
     has_default_shipping_address = SellerShippingAddress.objects.filter(seller=request.user, is_default=True).exists()
     unseen_notifications = Notification.objects.filter(seller=request.user, is_seen=False).order_by('-created_at')
-    
+    products = Product.objects.filter(seller_id=request.user, deleted_at__isnull=True)
+
     return render(request, 'sellers/seller_home.html', {
         'has_default_shipping_address': has_default_shipping_address,
         'unseen_notifications': unseen_notifications,
+        'products': products,
     })
 
 
@@ -194,7 +195,7 @@ def product_creation(request):
 
             # Every new seller product gets a matching approval request for the admin review queue.
             ProductApprovalRequest.submit_product(product=product, seller=request.user)
-            return redirect('product_list')
+            return redirect('seller_home')
     else:
         form = ProductForm()
 
@@ -206,9 +207,7 @@ def product_creation(request):
 
 @role_required('seller')
 def product_list(request):
-    # Sellers should only see their own non-deleted listings.
-    products = Product.objects.filter(seller_id=request.user, deleted_at__isnull=True)
-    return render(request, 'sellers/product_list.html', {'products': products})
+    return redirect('seller_home')
 
 
 @role_required('seller')
@@ -248,7 +247,7 @@ def product_edit(request, id):
                 editable_product.deleted_at = None
                 editable_product.save()
                 ProductApprovalRequest.submit_product(product=editable_product, seller=request.user)
-            return redirect('product_list')
+            return redirect('seller_home')
     else:
         form = ProductForm(instance=product)
 
@@ -265,7 +264,7 @@ def product_delete(request, id):
     if request.method == "POST":
         # Soft-delete the listing so related rows can still resolve historical information.
         product.soft_delete()
-        return redirect('product_list')
+        return redirect('seller_home')
 
     return render(request, 'sellers/product_delete.html', {'product': product})
 
@@ -366,7 +365,7 @@ def apply_discount(request, product_id):
     product = get_object_or_404(Product, id=product_id, seller_id=request.user, deleted_at__isnull=True)
     
     next_url = request.GET.get('next') or request.POST.get('next') or 'manage_product_discounts'
-    if next_url not in ('manage_product_discounts', 'product_list'):
+    if next_url not in ('manage_product_discounts', 'seller_home'):
         next_url = 'manage_product_discounts'
 
     if request.method == 'POST':
@@ -392,7 +391,7 @@ def remove_discount(request, product_id):
     product = get_object_or_404(Product, id=product_id, seller_id=request.user, deleted_at__isnull=True)
 
     next_url = request.GET.get('next') or request.POST.get('next') or 'manage_product_discounts'
-    if next_url not in ('manage_product_discounts', 'product_list'):
+    if next_url not in ('manage_product_discounts', 'seller_home'):
         next_url = 'manage_product_discounts'
 
     if request.method == 'POST':

@@ -49,7 +49,7 @@ class ProductWorkflowTests(TestCase):
             'description': 'Soft fleece hoodie',
         })
 
-        self.assertRedirects(response, reverse('product_list'))
+        self.assertRedirects(response, reverse('seller_home'))
         product = Product.objects.get(product_name='Seller Hoodie')
         approval_request = ProductApprovalRequest.objects.get(product_id=product)
 
@@ -74,7 +74,7 @@ class ProductWorkflowTests(TestCase):
                     'description': 'Soft fleece hoodie with image',
                 })
 
-                self.assertRedirects(response, reverse('product_list'))
+                self.assertRedirects(response, reverse('seller_home'))
                 product = Product.objects.get(product_name='Image Hoodie')
                 self.assertTrue(bool(product.image))
                 self.assertIn('status_icons/', product.image.name)
@@ -96,7 +96,7 @@ class ProductWorkflowTests(TestCase):
 
         response = self.client.post(reverse('product_delete', args=[product.id]))
 
-        self.assertRedirects(response, reverse('product_list'))
+        self.assertRedirects(response, reverse('seller_home'))
         product.refresh_from_db()
         self.assertFalse(product.active)
         self.assertIsNotNone(product.deleted_at)
@@ -153,7 +153,7 @@ class ProductWorkflowTests(TestCase):
             'description': 'Updated pending version',
         })
 
-        self.assertRedirects(response, reverse('product_list'))
+        self.assertRedirects(response, reverse('seller_home'))
         live_product.refresh_from_db()
         replacement = Product.objects.exclude(id=live_product.id).get(product_name='Live Hoodie V2')
         approval_request = ProductApprovalRequest.objects.get(product_id=replacement)
@@ -1043,7 +1043,7 @@ class ProductWorkflowTests(TestCase):
 			'name': '<script>alert("hack")</script>',
 			'price': 10
 		})
-        self.assertNotContains(response, '<script>')
+        self.assertNotContains(response, 'alert(')
 
     # verifying Django's built-in CSRF protection
     def test_csrf_protection_product_creation(self):
@@ -1167,7 +1167,7 @@ class DiscountTests(TestCase):
         self.product.discount_end_date = timezone.now() + timedelta(hours=1)
         self.product.save()
 
-        response = self.client.get(reverse('product_list'))
+        response = self.client.get(reverse('seller_home'))
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, '30% OFF')

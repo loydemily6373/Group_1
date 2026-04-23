@@ -1,133 +1,135 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Remove Discount - ThreadSwitch</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            background-color: #f4f6f8;
-            color: #1f2937;
-        }
+{% extends "sellers/base.html" %}
 
-        header {
-            background-color: #2c3e50;
-            color: white;
-            padding: 15px 30px;
-        }
+{% block title %}Remove Discount - ThreadSwitch{% endblock %}
 
-        nav {
-            background-color: #34495e;
-            padding: 10px 30px;
-        }
+{% block extra_css %}
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        background-color: #f4f6f8;
+        color: #1f2937;
+    }
 
-        nav a {
-            color: white;
-            text-decoration: none;
-            margin-right: 20px;
-            font-weight: bold;
-        }
+    header {
+        background-color: #2c3e50;
+        color: white;
+        padding: 15px 30px;
+    }
 
-        nav a:hover {
-            text-decoration: underline;
-        }
+    nav {
+        background-color: #34495e;
+        padding: 10px 30px;
+    }
 
-        .container {
-            max-width: 500px;
-            margin: 30px auto;
-            padding: 30px;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
+    nav a {
+        color: white;
+        text-decoration: none;
+        margin-right: 20px;
+        font-weight: bold;
+    }
 
-        h1 {
-            color: #991b1b;
-            margin-bottom: 20px;
-        }
+    nav a:hover {
+        text-decoration: underline;
+    }
 
-        .warning-box {
-            background: #fee2e2;
-            border: 1px solid #fecaca;
-            border-left: 4px solid #991b1b;
-            padding: 15px;
-            border-radius: 6px;
-            margin-bottom: 20px;
-        }
+    .container {
+        max-width: 500px;
+        margin: 30px auto;
+        padding: 30px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
 
-        .warning-box p {
-            margin: 8px 0;
-            color: #7c2d12;
-        }
+    h1 {
+        color: #991b1b;
+        margin-bottom: 20px;
+    }
 
-        .product-info {
-            background: #f3f4f6;
-            padding: 15px;
-            border-radius: 6px;
-            margin-bottom: 20px;
-            border-left: 4px solid #3498db;
-        }
+    .warning-box {
+        background: #fee2e2;
+        border: 1px solid #fecaca;
+        border-left: 4px solid #991b1b;
+        padding: 15px;
+        border-radius: 6px;
+        margin-bottom: 20px;
+    }
 
-        .product-info p {
-            margin: 8px 0;
-        }
+    .warning-box p {
+        margin: 8px 0;
+        color: #7c2d12;
+    }
 
-        .buttons {
-            display: flex;
-            gap: 10px;
-            margin-top: 30px;
-        }
+    .product-info {
+        background: #f3f4f6;
+        padding: 15px;
+        border-radius: 6px;
+        margin-bottom: 20px;
+        border-left: 4px solid #3498db;
+    }
 
-        .btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 1rem;
-            flex: 1;
-        }
+    .product-info p {
+        margin: 8px 0;
+    }
 
-        .btn-danger {
-            background-color: #ef4444;
-            color: white;
-        }
+    .buttons {
+        display: flex;
+        gap: 10px;
+        margin-top: 30px;
+    }
 
-        .btn-danger:hover {
-            background-color: #dc2626;
-        }
+    .btn {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: bold;
+        font-size: 1rem;
+        flex: 1;
+    }
 
-        .btn-secondary {
-            background-color: #6b7280;
-            color: white;
-            text-decoration: none;
-            text-align: center;
-        }
+    .btn-danger { background-color: #ef4444; color: white; }
+    .btn-danger:hover { background-color: #dc2626; }
 
-        .btn-secondary:hover {
-            background-color: #4b5563;
-        }
-    </style>
-</head>
-<body>
+    .btn-secondary {
+        background-color: #6b7280;
+        color: white;
+        text-decoration: none;
+        text-align: center;
+    }
+
+    .btn-secondary:hover { background-color: #4b5563; }
+
+    footer {
+        background-color: #2c3e50;
+        color: white;
+        text-align: center;
+        padding: 15px;
+        margin-top: 40px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
     <header>
         <h2>ThreadSwitch Seller Dashboard</h2>
     </header>
 
     <nav>
         <a href="{% url 'seller_home' %}">Home</a>
-        <a href="{% url 'product_list' %}">My Listings</a>
         <a href="{% url 'seller_order_history' %}">Orders</a>
         <a href="{% url 'seller_reviews' %}">Reviews</a>
-        <a href="{% url 'manage_product_discounts' %}">Manage Discounts</a>
-        <a href="{% url 'seller_home' %}">Logout</a>
+        <a href="{% url 'seller_shipping_address' %}">Shipping Address</a>
+        <a href="{% url 'webhook_settings' %}">Webhook Settings</a>
+        <a href="{% url 'account_logout' %}">Logout</a>
     </nav>
 
     <div class="container">
         <h1>Remove Discount</h1>
 
         <div class="warning-box">
-            <p><strong>⚠️ Are you sure?</strong></p>
+            <p><strong>Are you sure?</strong></p>
             <p>This will immediately remove the discount from this product. Buyers will no longer see the discounted price.</p>
         </div>
 
@@ -147,5 +149,8 @@
             </div>
         </form>
     </div>
-</body>
-</html>
+
+    <footer>
+        © 2026 ThreadSwitch
+    </footer>
+{% endblock %}
