@@ -197,6 +197,29 @@
             margin: 0;
         }
 
+        .price-original {
+            text-decoration: line-through;
+            color: #9ca3af;
+            margin-right: 6px;
+        }
+
+        .price-discounted {
+            color: #16a34a;
+            font-weight: bold;
+        }
+
+        .discount-badge {
+            display: inline-block;
+            background: #dc2626;
+            color: white;
+            font-size: 0.75rem;
+            font-weight: bold;
+            padding: 2px 7px;
+            border-radius: 4px;
+            margin-left: 6px;
+            vertical-align: middle;
+        }
+
         .product-list {
             display: flex;
             flex-wrap: wrap;
@@ -494,7 +517,15 @@
                         <div class="product-rating-count">No reviews yet</div>
                     {% endif %}
                     <p>Category: {{ item.product.category }}</p>
-                    <p>Price: ${{ item.product.price }}</p>
+                    <p>Price:
+                        {% if item.product.is_discount_active %}
+                            <span class="price-original">${{ item.product.price }}</span>
+                            <span class="price-discounted">${{ item.product.get_discounted_price }}</span>
+                            <span class="discount-badge">{{ item.product.discount_percent|floatformat:0 }}% OFF</span>
+                        {% else %}
+                            ${{ item.product.price }}
+                        {% endif %}
+                    </p>
                     <p class="product-description">{{ item.product.description|truncatechars:90 }}</p>
                     {% if item.product.id in compare_list %}
                         <span class="compare-item-badge">✓ In Comparison</span>
@@ -534,7 +565,15 @@
                                     <p><strong>Reviews:</strong> No reviews yet</p>
                                 {% endif %}
                                 <p><strong>Description:</strong> {{ item.product.description }}</p>
-                                <p><strong>Price:</strong> ${{ item.product.price }}</p>
+                                <p><strong>Price:</strong>
+                                    {% if item.product.is_discount_active %}
+                                        <span class="price-original">${{ item.product.price }}</span>
+                                        <span class="price-discounted">${{ item.product.get_discounted_price }}</span>
+                                        <span class="discount-badge">{{ item.product.discount_percent|floatformat:0 }}% OFF</span>
+                                    {% else %}
+                                        ${{ item.product.price }}
+                                    {% endif %}
+                                </p>
                                 <p><strong>Category:</strong> {{ item.product.category }}</p>
                                 <p><strong>Stock:</strong> {{ item.product.stock }}</p>
                                 {% if item.product.id in compare_list %}

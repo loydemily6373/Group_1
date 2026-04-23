@@ -42,6 +42,9 @@ class Product(models.Model):
     stock = models.IntegerField()
     description = models.TextField()
     active= models.BooleanField(null=True, blank=True)
+    discount_percent = models.FloatField(null=True, blank=True)
+    discount_start_date = models.DateTimeField(null=True, blank=True)
+    discount_end_date = models.DateTimeField(null=True, blank=True)
 
     STATUS_CHOICES = [
         ('pending', 'Pending'),
@@ -65,6 +68,20 @@ class Product(models.Model):
         self.active = False
         self.deleted_at = timezone.now()
         self.save(update_fields=['redirect_to', 'active', 'deleted_at'])
+    
+    @property
+    def is_discount_active(self):
+        if self.discount_percent and self.discount_start_date and self.discount_end_date:
+            now = timezone.now()
+            return self.discount_start_date <= now <= self.discount_end_date
+        return False
+
+    def get_discounted_price(self):
+        from decimal import Decimal
+        price = Decimal(str(self.price))
+        if self.is_discount_active:
+            return round(price * (1 - Decimal(str(self.discount_percent)) / 100), 2)
+        return price
 
     def __str__(self):
         return self.product_name
