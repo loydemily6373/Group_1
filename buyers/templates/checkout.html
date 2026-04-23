@@ -1,124 +1,124 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <title>Checkout</title>
+{% extends "base.html" %}
 
-    <style>
-        body {
-            font-family: Arial;
-            margin: 0;
-            background: #f4f6f8;
-            display: flex;
-            min-height: 100vh;
-            flex-direction: column;
-        }
+{% block title %}Checkout - ThreadSwitch{% endblock %}
 
-        header {
-            background: #2c3e50;
-            color: white;
-            padding: 15px 30px;
-        }
+{% block extra_css %}
+<style>
+    body {
+        font-family: Arial;
+        margin: 0;
+        background: #f4f6f8;
+        display: flex;
+        min-height: 100vh;
+        flex-direction: column;
+    }
 
-        nav {
-            background: #34495e;
-            padding: 10px 30px;
-        }
+    header {
+        background: #2c3e50;
+        color: white;
+        padding: 15px 30px;
+    }
 
-            nav a {
-                color: white;
-                text-decoration: none;
-                margin-right: 20px;
-                font-weight: bold;
-            }
+    nav {
+        background: #34495e;
+        padding: 10px 30px;
+    }
 
-                nav a:hover {
-                    text-decoration: underline;
-                }
+    nav a {
+        color: white;
+        text-decoration: none;
+        margin-right: 20px;
+        font-weight: bold;
+    }
 
-        .container {
-            padding: 30px;
-        }
+    nav a:hover {
+        text-decoration: underline;
+    }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background: white;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
+    .container {
+        padding: 30px;
+    }
 
-        th, td {
-            padding: 12px;
-            text-align: center;
-        }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
 
-        th {
-            background: #3498db;
-            color: white;
-        }
+    th, td {
+        padding: 12px;
+        text-align: center;
+    }
 
-        tr:nth-child(even) {
-            background: #f2f2f2;
-        }
+    th {
+        background: #3498db;
+        color: white;
+    }
 
-        .checkout-btn {
-            background: #27ae60;
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            margin-top: 20px;
-            cursor: pointer;
-            border-radius: 4px;
-        }
+    tr:nth-child(even) {
+        background: #f2f2f2;
+    }
 
-        .panel {
-            background: white;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            padding: 20px;
-            margin-top: 20px;
-        }
+    .checkout-btn {
+        background: #27ae60;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        margin-top: 20px;
+        cursor: pointer;
+        border-radius: 4px;
+    }
 
-        .field {
-            margin-bottom: 15px;
-        }
+    .panel {
+        background: white;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        padding: 20px;
+        margin-top: 20px;
+    }
 
-        .field label {
-            display: block;
-            margin-bottom: 6px;
-            font-weight: bold;
-        }
+    .field {
+        margin-bottom: 15px;
+    }
 
-        .field input, .field select {
-            width: 100%;
-            padding: 8px;
-            box-sizing: border-box;
-        }
+    .field label {
+        display: block;
+        margin-bottom: 6px;
+        font-weight: bold;
+    }
 
-        .errorlist {
-            color: #c0392b;
-            list-style: none;
-            padding-left: 0;
-        }
+    .field input, .field select {
+        width: 100%;
+        padding: 8px;
+        box-sizing: border-box;
+    }
 
-        .hidden-section {
-            display: none;
-        }
+    .errorlist {
+        color: #c0392b;
+        list-style: none;
+        padding-left: 0;
+    }
 
-        .helper-text {
-            color: #555;
-            margin-top: 0;
-        }
-        footer {
-            background-color: #2c3e50;
-            color: white;
-            text-align: center;
-            padding: 15px;
-            margin-top: auto;
-        }
-    </style>
-</head>
+    .hidden-section {
+        display: none;
+    }
 
-<body>
+    .helper-text {
+        color: #555;
+        margin-top: 0;
+    }
+
+    footer {
+        background-color: #2c3e50;
+        color: white;
+        text-align: center;
+        padding: 15px;
+        margin-top: auto;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
     <header><h1>Checkout</h1></header>
 
     <nav>
@@ -127,7 +127,6 @@
         <a href="{% url 'buyer_return_requests' %}">Pending Returns</a>
         <a href="{% url 'cart_view' %}">Cart</a>
         <a href="{% url 'account_logout' %}">Logout</a>
-    </nav>
     </nav>
 
     <div class="container">
@@ -269,42 +268,43 @@
     <footer>
         © 2026 ThreadSwitch
     </footer>
+{% endblock %}
 
-    <script>
-        const savedAddressSelect = document.getElementById('buyer_address_id');
-        const savedPaymentSelect = document.getElementById('payment_method_id');
-        const newAddressFields = document.getElementById('new-address-fields');
-        const newPaymentFields = document.getElementById('new-payment-fields');
+{% block extra_js %}
+<script>
+    const savedAddressSelect = document.getElementById('buyer_address_id');
+    const savedPaymentSelect = document.getElementById('payment_method_id');
+    const newAddressFields = document.getElementById('new-address-fields');
+    const newPaymentFields = document.getElementById('new-payment-fields');
 
-        function toggleFieldSection(selectElement, containerElement) {
-            if (!selectElement || !containerElement) {
-                return;
+    function toggleFieldSection(selectElement, containerElement) {
+        if (!selectElement || !containerElement) {
+            return;
+        }
+
+        const isUsingSavedValue = selectElement.value !== '';
+        containerElement.classList.toggle('hidden-section', isUsingSavedValue);
+
+        containerElement.querySelectorAll('input, select, textarea').forEach((field) => {
+            if (isUsingSavedValue) {
+                field.dataset.wasRequired = field.required ? 'true' : 'false';
+                field.required = false;
+                field.disabled = true;
+            } else {
+                field.required = field.dataset.wasRequired === 'true';
+                field.disabled = false;
             }
+        });
+    }
 
-            const isUsingSavedValue = selectElement.value !== '';
-            containerElement.classList.toggle('hidden-section', isUsingSavedValue);
+    toggleFieldSection(savedAddressSelect, newAddressFields);
+    toggleFieldSection(savedPaymentSelect, newPaymentFields);
 
-            containerElement.querySelectorAll('input, select, textarea').forEach((field) => {
-                if (isUsingSavedValue) {
-                    field.dataset.wasRequired = field.required ? 'true' : 'false';
-                    field.required = false;
-                    field.disabled = true;
-                } else {
-                    field.required = field.dataset.wasRequired === 'true';
-                    field.disabled = false;
-                }
-            });
-        }
-
-        toggleFieldSection(savedAddressSelect, newAddressFields);
-        toggleFieldSection(savedPaymentSelect, newPaymentFields);
-
-        if (savedAddressSelect) {
-            savedAddressSelect.addEventListener('change', () => toggleFieldSection(savedAddressSelect, newAddressFields));
-        }
-        if (savedPaymentSelect) {
-            savedPaymentSelect.addEventListener('change', () => toggleFieldSection(savedPaymentSelect, newPaymentFields));
-        }
-    </script>
-</body>
-</html>
+    if (savedAddressSelect) {
+        savedAddressSelect.addEventListener('change', () => toggleFieldSection(savedAddressSelect, newAddressFields));
+    }
+    if (savedPaymentSelect) {
+        savedPaymentSelect.addEventListener('change', () => toggleFieldSection(savedPaymentSelect, newPaymentFields));
+    }
+</script>
+{% endblock %}

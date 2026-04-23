@@ -1,112 +1,117 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <title>Product Requests</title>
+{% extends "base.html" %}
 
-    <style>
-        body {
-            font-family: Arial;
-            margin: 0;
-            background: #f4f6f8;
-        }
+{% block title %}Product Requests - ThreadSwitch{% endblock %}
 
-        header {
-            background: #2c3e50;
-            color: white;
-            padding: 15px 30px;
-        }
+{% block extra_css %}
+<style>
+    body {
+        font-family: Arial;
+        margin: 0;
+        background: #f4f6f8;
+    }
 
-        nav {
-            background: #34495e;
-            padding: 10px 30px;
-        }
+    header {
+        background: #2c3e50;
+        color: white;
+        padding: 15px 30px;
+    }
 
-            nav a {
-                color: white;
-                text-decoration: none;
-                margin-right: 20px;
-                font-weight: bold;
-            }
+    nav {
+        background: #34495e;
+        padding: 10px 30px;
+    }
 
-                nav a:hover {
-                    text-decoration: underline;
-                }
+    nav a {
+        color: white;
+        text-decoration: none;
+        margin-right: 20px;
+        font-weight: bold;
+    }
 
-        .container {
-            padding: 30px;
-        }
+    nav a:hover {
+        text-decoration: underline;
+    }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background: white;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
+    .container {
+        padding: 30px;
+    }
 
-        th, td {
-            padding: 12px;
-            text-align: center;
-        }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
 
-        th {
-            background: #3498db;
-            color: white;
-        }
+    th, td {
+        padding: 12px;
+        text-align: center;
+    }
 
-        tr:nth-child(even) {
-            background: #f2f2f2;
-        }
+    th {
+        background: #3498db;
+        color: white;
+    }
 
-        .approve-btn {
-            background: #27ae60;
-            color: white;
-            border: none;
-            padding: 3px 10px;
-            margin-right: 5px;
-        }
+    tr:nth-child(even) {
+        background: #f2f2f2;
+    }
 
-        .reject-btn {
-            background: #e74c3c;
-            color: white;
-            border: none;
-            padding: 3px 10px;
-        }
+    .approve-btn {
+        background: #27ae60;
+        color: white;
+        border: none;
+        padding: 3px 10px;
+        margin-right: 5px;
+        text-decoration: none;
+        border-radius: 4px;
+        display: inline-block;
+    }
 
-        .approve-label {
-            color: rgb(0, 221, 0);
-            font-weight: bold;
-        }
+    .reject-btn {
+        background: #e74c3c;
+        color: white;
+        border: none;
+        padding: 3px 10px;
+        text-decoration: none;
+        border-radius: 4px;
+        display: inline-block;
+    }
 
-        .rejected-label {
-            color: red;
-            font-weight: bold;
-        }
-        footer {
-            background-color: #2c3e50;
-            color: white;
-            text-align: center;
-            padding: 15px;
-            margin-top: 40px;
-        }
-    </style>
-</head>
+    .approved-label {
+        color: #15803d;
+        font-weight: bold;
+    }
 
-<body>
+    .rejected-label {
+        color: #dc2626;
+        font-weight: bold;
+    }
+
+    footer {
+        background-color: #2c3e50;
+        color: white;
+        text-align: center;
+        padding: 15px;
+        margin-top: 40px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
     <header><h1>Product Approval Requests</h1></header>
 
     <nav>
         <a href="{% url 'admin_home' %}">Home</a>
         <a href="{% url 'product_requests' %}">Product Requests</a>
         <a href="{% url 'seller_requests' %}">Seller Account Requests</a>
+        <a href="{% url 'review_moderation' %}">Review Moderation</a>
         <a href="{% url 'account_logout' %}">Logout</a>
     </nav>
 
     <div class="container">
-
         <table>
             <tr>
-                
                 <th>Request Type</th>
                 <th>Product Name</th>
                 <th>Original Product</th>
@@ -121,7 +126,6 @@
             </tr>
             {% for approval_request in product_requests %}
             <tr>
-                
                 <td>{{ approval_request.get_request_type_display }}</td>
                 <td>{{ approval_request.name }}</td>
                 <td>
@@ -153,12 +157,9 @@
                 <td>
                     {% if approval_request.approved == None %}
                         <a href="{% url 'approve_product' approval_request.id %}" class="approve-btn">Approve</a>
-
                         <a href="{% url 'reject_product' approval_request.id %}" class="reject-btn">Reject</a>
-
                     {% elif approval_request.approved == True %}
                         <span class="approved-label">Approved</span>
-
                     {% else %}
                         <span class="rejected-label">Rejected</span>
                     {% endif %}
@@ -166,7 +167,7 @@
             </tr>
             {% empty %}
             <tr>
-                <td colspan="13">No product approval requests found.</td>
+                <td colspan="11">No product approval requests found.</td>
             </tr>
             {% endfor %}
         </table>
@@ -175,6 +176,4 @@
     <footer>
         &copy; 2026 ThreadSwitch
     </footer>
-
-</body>
-</html>
+{% endblock %}

@@ -1,180 +1,100 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>{{ action }} - ThreadSwitch</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            background-color: #f4f6f8;
-            color: #1f2937;
-        }
+{% extends "base.html" %}
 
-        header {
-            background-color: #2c3e50;
-            color: white;
-            padding: 15px 30px;
-        }
+{% block title %}{{ action }} - ThreadSwitch{% endblock %}
 
-        nav {
-            background-color: #34495e;
-            padding: 10px 30px;
-        }
+{% block extra_css %}
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        background-color: #f4f6f8;
+        color: #1f2937;
+    }
 
-        nav a {
-            color: white;
-            text-decoration: none;
-            margin-right: 20px;
-            font-weight: bold;
-        }
+    header {
+        background-color: #2c3e50;
+        color: white;
+        padding: 15px 30px;
+    }
 
-        nav a:hover {
-            text-decoration: underline;
-        }
+    nav {
+        background-color: #34495e;
+        padding: 10px 30px;
+    }
 
-        .container {
-            max-width: 600px;
-            margin: 30px auto;
-            padding: 20px;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
+    nav a {
+        color: white;
+        text-decoration: none;
+        margin-right: 20px;
+        font-weight: bold;
+    }
 
-    
+    nav a:hover { text-decoration: underline; }
 
-        .product-info {
-            background-color: #f0f0f0;
-            padding: 15px;
-            border-radius: 4px;
-            margin-bottom: 20px;
-        }
+    .container {
+        max-width: 600px;
+        margin: 30px auto;
+        padding: 20px;
+    }
 
-        .product-info p {
-            margin: 5px 0;
-        }
+    .product-info {
+        background-color: #f0f0f0;
+        padding: 15px;
+        border-radius: 4px;
+        margin-bottom: 20px;
+    }
 
-        .form-group {
-            margin-bottom: 20px;
-        }
+    .product-info p { margin: 5px 0; }
 
-        label {
-            display: block;
-            font-weight: bold;
-            margin-bottom: 8px;
-            color: #2c3e50;
-        }
+    .rating-options {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
 
-        input[type="text"],
-        textarea,
-        select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-family: Arial, sans-serif;
-            box-sizing: border-box;
-        }
+    .rating-option {
+        display: flex;
+        align-items: center;
+    }
 
-        textarea {
-            resize: vertical;
-            min-height: 120px;
-        }
+    .rating-option input[type="radio"] {
+        width: auto;
+        margin-right: 10px;
+    }
 
-        input[type="text"]:focus,
-        textarea:focus,
-        select:focus {
-            outline: none;
-            border-color: #3498db;
-            box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
-        }
+    button[type="submit"] {
+        background-color: #3498db;
+        color: white;
+        flex: 1;
+    }
 
-        .rating-options {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
+    button[type="submit"]:hover { background-color: #2980b9; }
 
-        .rating-option {
-            display: flex;
-            align-items: center;
-        }
+    .cancel-link {
+        background-color: #95a5a6;
+        color: white;
+        flex: 1;
+        padding: 12px 24px;
+        border-radius: 4px;
+        font-weight: bold;
+        text-decoration: none;
+        display: inline-block;
+        text-align: center;
+    }
 
-        .rating-option input[type="radio"] {
-            width: auto;
-            margin-right: 10px;
-        }
+    .cancel-link:hover { background-color: #7f8c8d; }
 
-        .button-group {
-            display: flex;
-            gap: 10px;
-            margin-top: 30px;
-        }
+    footer {
+        background-color: #2c3e50;
+        color: white;
+        text-align: center;
+        padding: 15px;
+        margin-top: 40px;
+    }
+</style>
+{% endblock %}
 
-        button,
-        .cancel-link {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 4px;
-            font-weight: bold;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
-            text-align: center;
-        }
-
-        button[type="submit"] {
-            background-color: #3498db;
-            color: white;
-            flex: 1;
-        }
-
-        button[type="submit"]:hover {
-            background-color: #2980b9;
-        }
-
-        .cancel-link {
-            background-color: #95a5a6;
-            color: white;
-            flex: 1;
-        }
-
-        .cancel-link:hover {
-            background-color: #7f8c8d;
-        }
-
-        footer {
-            background-color: #2c3e50;
-            color: white;
-            text-align: center;
-            padding: 15px;
-            margin-top: 40px;
-        }
-
-        .error-message {
-            background-color: #fee;
-            color: #c00;
-            padding: 10px;
-            border-radius: 4px;
-            margin-bottom: 20px;
-            border-left: 4px solid #c00;
-        }
-
-        .errorlist {
-            color: #c00;
-            list-style: none;
-            padding-left: 0;
-            margin-bottom: 10px;
-        }
-
-        .errorlist li {
-            padding: 5px 0;
-        }
-    </style>
-</head>
-
-<body>
-
+{% block content %}
     <header><h1>{{ action }}</h1></header>
 
     <nav>
@@ -184,9 +104,9 @@
         <a href="{% url 'cart_view' %}">Cart</a>
         <a href="{% url 'account_logout' %}">Logout</a>
     </nav>
-    </nav>
 
     <div class="container">
+      <div class="form-card">
         {% if order_item %}
             <div class="product-info">
                 <p><strong>Product:</strong> {{ order_item.product_name }}</p>
@@ -262,11 +182,10 @@
                 <a href="{% url 'buyer_order_history' %}" class="cancel-link">Cancel</a>
             </div>
         </form>
+      </div>
     </div>
 
     <footer>
         © 2026 ThreadSwitch
     </footer>
-
-</body>
-</html>
+{% endblock %}

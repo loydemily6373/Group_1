@@ -1,444 +1,471 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Buyer Home</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            background-color: #f4f6f8;
-        }
+{% extends "base.html" %}
 
-        header {
-            background-color: #2c3e50;
-            color: white;
-            padding: 15px 30px;
-        }
+{% block title %}Buyer Home{% endblock %}
 
-        nav {
-            background-color: #34495e;
-            padding: 10px 30px;
-        }
+{% block extra_css %}
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        background-color: #f4f6f8;
+    }
 
-        nav a {
-            color: white;
-            text-decoration: none;
-            margin-right: 20px;
-            font-weight: bold;
-        }
+    header {
+        background-color: #2c3e50;
+        color: white;
+        padding: 15px 30px;
+    }
 
-        nav a:hover {
-            text-decoration: underline;
-        }
+    nav {
+        background-color: #34495e;
+        padding: 10px 30px;
+    }
 
-        .container {
-            padding: 30px;
-        }
+    nav a {
+        color: white;
+        text-decoration: none;
+        margin-right: 20px;
+        font-weight: bold;
+    }
 
-        .search-box form {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            align-items: center;
-        }
+    nav a:hover {
+        text-decoration: underline;
+    }
 
-        .search-box input,
-        .search-box select {
-            padding: 8px;
-        }
+    .container {
+        padding: 30px;
+    }
 
-        .search-box input {
-            width: 260px;
-        }
+    .search-box form {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+    }
 
-        .search-box select {
-            width: 220px;
-        }
+    .search-box input,
+    .search-box select {
+        padding: 8px;
+    }
 
-        .search-box button,
-        .search-box a {
-            padding: 8px 12px;
-            background-color: #3498db;
-            border: none;
-            color: white;
-            cursor: pointer;
-            text-decoration: none;
-            border-radius: 4px;
-        }
+    .search-box input {
+        width: 260px;
+    }
 
-        .filter-summary {
-            margin-top: 12px;
-            color: #4b5563;
-        }
+    .search-box select {
+        width: 220px;
+    }
 
-        .search-actions {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            align-items: center;
-        }
+    .search-box button,
+    .search-box a {
+        padding: 8px 12px;
+        background-color: #3498db;
+        border: none;
+        color: white;
+        cursor: pointer;
+        text-decoration: none;
+        border-radius: 4px;
+    }
 
-        .message-list {
-            list-style: none;
-            padding: 0;
-            margin: 0 0 20px;
-        }
+    .filter-summary {
+        margin-top: 12px;
+        color: #4b5563;
+    }
 
-        .message-list li {
-            padding: 12px 14px;
-            border-radius: 6px;
-            margin-bottom: 10px;
-            font-weight: bold;
-        }
+    .search-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+    }
 
-        .message-list .error {
-            background: #fee2e2;
-            color: #991b1b;
-        }
+    .message-list {
+        list-style: none;
+        padding: 0;
+        margin: 0 0 20px;
+    }
 
-        .compare-button {
-            padding: 10px 16px;
-            border: none;
-            border-radius: 6px;
-            background: #111827;
-            color: white;
-            cursor: pointer;
-            font-weight: bold;
-        }
+    .message-list li {
+        padding: 12px 14px;
+        border-radius: 6px;
+        margin-bottom: 10px;
+        font-weight: bold;
+    }
 
-        .compare-button:hover {
-            background: #1f2937;
-        }
+    .message-list .error {
+        background: #fee2e2;
+        color: #991b1b;
+    }
 
-        .compare-badge {
-            display: inline-block;
-            background: #dc2626;
-            color: white;
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            line-height: 24px;
-            text-align: center;
-            font-size: 0.85rem;
-            font-weight: bold;
-            margin-left: 6px;
-            vertical-align: middle;
-        }
+    .compare-button {
+        padding: 10px 16px;
+        border: none;
+        border-radius: 6px;
+        background: #111827;
+        color: white;
+        cursor: pointer;
+        font-weight: bold;
+        text-decoration: none;
+        display: inline-block;
+    }
 
-        .compare-status-bar {
-            background: #ecfdf5;
-            border: 1px solid #d1fae5;
-            border-radius: 6px;
-            padding: 12px 16px;
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+    .compare-button:hover {
+        background: #1f2937;
+    }
 
-        .compare-status-bar.hidden {
-            display: none;
-        }
+    .compare-badge {
+        display: inline-block;
+        background: #dc2626;
+        color: white;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        line-height: 24px;
+        text-align: center;
+        font-size: 0.85rem;
+        font-weight: bold;
+        margin-left: 6px;
+        vertical-align: middle;
+    }
 
-        .compare-item-badge {
-            background: #065f46;
-            color: white;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 0.85rem;
-            margin-top: 8px;
-            display: inline-block;
-        }
+    .compare-status-bar {
+        background: #ecfdf5;
+        border: 1px solid #d1fae5;
+        border-radius: 6px;
+        padding: 12px 16px;
+        margin-bottom: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
 
-        .compare-actions-group {
-            display: flex;
-            gap: 8px;
-            margin-top: 8px;
-        }
+    .compare-item-badge {
+        background: #065f46;
+        color: white;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.85rem;
+        margin-top: 8px;
+        display: inline-block;
+    }
 
-        .compare-add-btn,
-        .compare-remove-btn {
-            padding: 6px 10px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.85rem;
-            font-weight: bold;
-        }
+    .compare-actions-group {
+        display: flex;
+        gap: 8px;
+        margin-top: 8px;
+    }
 
-        .compare-add-btn {
-            background: #10b981;
-            color: white;
-        }
+    .compare-add-btn,
+    .compare-remove-btn {
+        padding: 6px 10px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        font-weight: bold;
+        text-decoration: none;
+    }
 
-        .compare-add-btn:hover {
-            background: #059669;
-        }
+    .compare-add-btn {
+        background: #10b981;
+        color: white;
+    }
 
-        .compare-remove-btn {
-            background: #ef4444;
-            color: white;
-        }
+    .compare-add-btn:hover {
+        background: #059669;
+    }
 
-        .compare-remove-btn:hover {
-            background: #dc2626;
-        }
+    .compare-remove-btn {
+        background: #ef4444;
+        color: white;
+    }
 
-        .compare-select {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.95rem;
-            color: #334155;
-            margin-top: 8px;
-        }
+    .compare-remove-btn:hover {
+        background: #dc2626;
+    }
 
-        .compare-select input {
-            margin: 0;
-        }
+    .price-original {
+        text-decoration: line-through;
+        color: #9ca3af;
+        margin-right: 6px;
+    }
 
-        .price-original {
-            text-decoration: line-through;
-            color: #9ca3af;
-            margin-right: 6px;
-        }
+    .price-discounted {
+        color: #16a34a;
+        font-weight: bold;
+    }
 
-        .price-discounted {
-            color: #16a34a;
-            font-weight: bold;
-        }
+    .discount-badge {
+        display: inline-block;
+        background: #dc2626;
+        color: white;
+        font-size: 0.75rem;
+        font-weight: bold;
+        padding: 2px 7px;
+        border-radius: 4px;
+        margin-left: 6px;
+        vertical-align: middle;
+    }
 
-        .discount-badge {
-            display: inline-block;
-            background: #dc2626;
-            color: white;
-            font-size: 0.75rem;
-            font-weight: bold;
-            padding: 2px 7px;
-            border-radius: 4px;
-            margin-left: 6px;
-            vertical-align: middle;
-        }
+    .product-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-top: 20px;
+    }
 
-        .product-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            margin-top: 20px;
-        }
+    .product-card {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        width: 200px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
 
-        .product-card {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            width: 200px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-        }
+    .product-image,
+    .product-image-placeholder {
+        width: 100%;
+        height: 180px;
+        border-radius: 8px;
+        margin-bottom: 12px;
+    }
 
-        .product-image,
-        .product-image-placeholder {
-            width: 100%;
-            height: 180px;
-            border-radius: 8px;
-            margin-bottom: 12px;
-        }
+    .product-image {
+        object-fit: cover;
+        display: block;
+        background: #e5e7eb;
+    }
 
-        .product-image {
-            object-fit: cover;
-            display: block;
-            background: #e5e7eb;
-        }
+    .product-image-placeholder {
+        background: linear-gradient(135deg, #dbeafe, #e5e7eb);
+        color: #475569;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        text-align: center;
+        padding: 12px;
+        box-sizing: border-box;
+    }
 
-        .product-image-placeholder {
-            background: linear-gradient(135deg, #dbeafe, #e5e7eb);
-            color: #475569;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            text-align: center;
-            padding: 12px;
-            box-sizing: border-box;
-        }
+    .product-card h3 {
+        margin-top: 0;
+        margin-bottom: 0;
+    }
 
-        .product-card h3 {
-            margin-top: 0;
-            margin-bottom: 0;
-        }
+    .product-rating {
+        font-size: 13px;
+        color: #f59e0b;
+        margin: 2px 0;
+    }
 
-        .product-rating {
-            font-size: 13px;
-            color: #f59e0b;
-            margin: 2px 0;
-        }
+    .product-rating-count {
+        font-size: 11px;
+        color: #9ca3af;
+        margin: 2px 0;
+    }
 
-        .product-rating-count {
-            font-size: 11px;
-            color: #9ca3af;
-            margin: 2px 0;
-        }
+    .product-description {
+        color: #475569;
+        flex-grow: 1;
+    }
 
-        .product-description {
-            color: #475569;
-            flex-grow: 1;
-        }
+    .product-actions {
+        display: flex;
+        gap: 5px;
+        flex-wrap: wrap;
+        margin-top: auto;
+    }
 
-        .product-actions {
-            display: flex;
-            gap: 5px;
-            flex-wrap: wrap;
-            margin-top: auto;
-        }
+    .product-actions a,
+    .product-actions button {
+        padding: 8px 12px;
+        border-radius: 6px;
+        border: none;
+        text-decoration: none;
+        cursor: pointer;
+        font-size: 0.95rem;
+    }
 
-        .product-actions a,
-        .product-actions button {
-            padding: 8px 12px;
-            border-radius: 6px;
-            border: none;
-            text-decoration: none;
-            cursor: pointer;
-            font-size: 0.95rem;
-        }
+    .view-details-btn {
+        background: #0f766e;
+        color: white;
+    }
 
-        .view-details-btn {
-            background: #0f766e;
-            color: white;
-        }
+    .add-to-cart-btn {
+        background: #2563eb;
+        color: white;
+    }
 
-        .add-to-cart-btn {
-            background: #2563eb;
-            color: white;
-        }
+    .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.65);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        z-index: 1000;
+    }
 
-        .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(15, 23, 42, 0.65);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            padding: 24px;
-            z-index: 1000;
-        }
+    .modal-overlay.is-open {
+        display: flex;
+    }
 
-        .modal-overlay.is-open {
-            display: flex;
-        }
+    .modal-card {
+        background: white;
+        border-radius: 16px;
+        width: min(760px, 100%);
+        max-height: 90vh;
+        overflow-y: auto;
+        padding: 24px;
+        box-shadow: 0 20px 50px rgba(15, 23, 42, 0.25);
+    }
 
-        .modal-card {
-            background: white;
-            border-radius: 16px;
-            width: min(760px, 100%);
-            max-height: 90vh;
-            overflow-y: auto;
-            padding: 24px;
-            box-shadow: 0 20px 50px rgba(15, 23, 42, 0.25);
-        }
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 16px;
+        margin-bottom: 20px;
+    }
 
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 16px;
-            margin-bottom: 20px;
-        }
+    .modal-header h2 {
+        margin: 0;
+    }
 
-        .modal-header h2 {
-            margin: 0;
-        }
+    .modal-close {
+        background: transparent;
+        border: none;
+        font-size: 1.6rem;
+        line-height: 1;
+        cursor: pointer;
+        color: #475569;
+    }
 
-        .modal-close {
-            background: transparent;
-            border: none;
-            font-size: 1.6rem;
-            line-height: 1;
-            cursor: pointer;
-            color: #475569;
-        }
+    .modal-content {
+        display: grid;
+        grid-template-columns: minmax(240px, 320px) 1fr;
+        gap: 24px;
+    }
 
+    .modal-image,
+    .modal-image-placeholder {
+        width: 100%;
+        height: 320px;
+        border-radius: 14px;
+    }
+
+    .modal-image {
+        object-fit: cover;
+        display: block;
+        background: #e5e7eb;
+    }
+
+    .modal-image-placeholder {
+        background: linear-gradient(135deg, #dbeafe, #e5e7eb);
+        color: #475569;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        text-align: center;
+        padding: 16px;
+        box-sizing: border-box;
+    }
+
+    .modal-details p {
+        margin: 0 0 12px;
+        color: #334155;
+    }
+
+    .modal-details strong {
+        color: #0f172a;
+    }
+
+    .modal-reviews {
+        margin-top: 16px;
+        border-top: 1px solid #e2e8f0;
+        padding-top: 12px;
+    }
+
+    .modal-review-item {
+        margin-top: 12px;
+        padding: 10px 12px;
+        background: #f8fafc;
+        border-radius: 6px;
+        border-left: 3px solid #3498db;
+    }
+
+    .modal-review-header {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 6px;
+    }
+
+    .modal-review-stars { color: #f59e0b; font-size: 0.9rem; }
+    .modal-review-title { font-weight: bold; color: #0f172a; }
+    .modal-review-author { color: #6b7280; font-size: 0.85rem; }
+
+    .modal-review-comment {
+        margin: 0;
+        color: #334155;
+        font-size: 0.9rem;
+    }
+
+    .dark-mode .modal-review-item {
+        background: #1e293b;
+        border-left-color: #3b82f6;
+    }
+
+    .dark-mode .modal-review-title { color: #e2e8f0; }
+    .dark-mode .modal-review-comment { color: #cbd5e1; }
+    .dark-mode .modal-reviews { border-top-color: #334155; }
+
+    @media (max-width: 720px) {
         .modal-content {
-            display: grid;
-            grid-template-columns: minmax(240px, 320px) 1fr;
-            gap: 24px;
+            grid-template-columns: 1fr;
         }
 
         .modal-image,
         .modal-image-placeholder {
-            width: 100%;
-            height: 320px;
-            border-radius: 14px;
+            height: 240px;
         }
+    }
 
-        .modal-image {
-            object-fit: cover;
-            display: block;
-            background: #e5e7eb;
-        }
+    .pagination {
+        margin-top: 24px;
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
 
-        .modal-image-placeholder {
-            background: linear-gradient(135deg, #dbeafe, #e5e7eb);
-            color: #475569;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            text-align: center;
-            padding: 16px;
-            box-sizing: border-box;
-        }
+    .pagination a,
+    .pagination span {
+        background: white;
+        padding: 8px 12px;
+        border-radius: 6px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        text-decoration: none;
+        color: #2c3e50;
+    }
 
-        .modal-details p {
-            margin: 0 0 12px;
-            color: #334155;
-        }
+    footer {
+        background-color: #2c3e50;
+        color: white;
+        text-align: center;
+        padding: 15px;
+        margin-top: 40px;
+    }
+</style>
+{% endblock %}
 
-        .modal-details strong {
-            color: #0f172a;
-        }
-
-        @media (max-width: 720px) {
-            .modal-content {
-                grid-template-columns: 1fr;
-            }
-
-            .modal-image,
-            .modal-image-placeholder {
-                height: 240px;
-            }
-        }
-
-        .pagination {
-            margin-top: 24px;
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-
-        .pagination a,
-        .pagination span {
-            background: white;
-            padding: 8px 12px;
-            border-radius: 6px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            text-decoration: none;
-            color: #2c3e50;
-        }
-
-        footer {
-            background-color: #2c3e50;
-            color: white;
-            text-align: center;
-            padding: 15px;
-            margin-top: 40px;
-        }
-    </style>
-</head>
-
-<body>
-
+{% block content %}
     <header>
         <h1>Welcome, Buyer!</h1>
     </header>
@@ -450,7 +477,6 @@
         <a href="{% url 'cart_view' %}">Cart</a>
         <a href="{% url 'account_logout' %}">Logout</a>
     </nav>
-    </nav>
 
     <div class="container">
         {% if messages %}
@@ -459,6 +485,16 @@
                     <li class="{{ message.tags|default:'info' }}">{{ message }}</li>
                 {% endfor %}
             </ul>
+        {% endif %}
+
+        {% if compare_count > 0 %}
+            <div class="compare-status-bar">
+                <span>Products in comparison: {{ compare_count }}/10</span>
+                <a href="{% url 'compare_products' %}" class="compare-button">
+                    View Comparison
+                    <span class="compare-badge">{{ compare_count }}</span>
+                </a>
+            </div>
         {% endif %}
 
         <div class="search-box">
@@ -486,16 +522,6 @@
                 </p>
             {% endif %}
         </div>
-
-        {% if compare_count > 0 %}
-            <div class="compare-status-bar">
-                <span>Products in comparison: <strong>{{ compare_count }}/10</strong></span>
-                <div>
-                    <a href="{% url 'compare_products' %}" class="compare-button">View Comparison</a>
-                    <a href="{% url 'clear_compare' %}" class="compare-button" style="background: #dc2626;">Clear Comparison</a>
-                </div>
-            </div>
-        {% endif %}
 
         <div class="product-list">
             {% for item in products %}
@@ -589,29 +615,21 @@
                                 </div>
                             </div>
                         </div>
-                        
-                        <!-- Reviews Section -->
-                        <div class="modal-reviews" style="margin-top: 20px; border-top: 1px solid #e5e7eb; padding-top: 15px;">
-                            <h3>Customer Reviews</h3>
-                            {% if item.review_count > 0 %}
+                        {% if item.reviews %}
+                            <div class="modal-reviews">
+                                <strong>Customer Reviews:</strong>
                                 {% for review in item.reviews %}
-                                    <div style="margin-bottom: 12px; padding: 10px; background: #f9fafb; border-radius: 4px; border-left: 3px solid #f59e0b;">
-                                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 5px;">
-                                            <strong style="color: #1f2937;">{{ review.buyer.username }}</strong>
-                                            <span style="color: #f59e0b; font-size: 13px;">★ {{ review.rating }}/5</span>
+                                    <div class="modal-review-item">
+                                        <div class="modal-review-header">
+                                            <span class="modal-review-stars">{{ review.get_rating_display }}</span>
+                                            <span class="modal-review-title">{{ review.title }}</span>
+                                            <span class="modal-review-author">— {{ review.buyer.username }}</span>
                                         </div>
-                                        <p style="margin: 5px 0; color: #4b5563; font-weight: bold; font-size: 13px;">{{ review.title }}</p>
-                                        <p style="margin: 5px 0; color: #6b7280; font-size: 13px;">{{ review.comment|truncatechars:150 }}</p>
-                                        <span style="color: #9ca3af; font-size: 12px;">{{ review.created_at|date:"M d, Y" }}</span>
+                                        <p class="modal-review-comment">{{ review.comment }}</p>
                                     </div>
                                 {% endfor %}
-                                {% if item.review_count > 3 %}
-                                    <p style="color: #9ca3af; font-size: 13px; text-align: center; margin-top: 10px;">+ {{ item.review_count|add:"-3" }} more reviews</p>
-                                {% endif %}
-                            {% else %}
-                                <p style="color: #9ca3af;">No reviews yet. Be the first to review this product!</p>
-                            {% endif %}
-                        </div>
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
             {% empty %}
@@ -635,55 +653,49 @@
     <footer>
         © 2026 ThreadSwitch
     </footer>
+{% endblock %}
 
-    <script>
-        const modalOpenButtons = document.querySelectorAll('[data-modal-target]');
-        const modalCloseButtons = document.querySelectorAll('[data-modal-close]');
+{% block extra_js %}
+<script>
+    const modalOpenButtons = document.querySelectorAll('[data-modal-target]');
+    const modalCloseButtons = document.querySelectorAll('[data-modal-close]');
 
-        function closeModal(modal) {
-            modal.classList.remove('is-open');
-            modal.setAttribute('aria-hidden', 'true');
-            document.body.style.overflow = '';
+    function closeModal(modal) {
+        modal.classList.remove('is-open');
+        modal.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+    }
+
+    function openModal(modal) {
+        modal.classList.add('is-open');
+        modal.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+    }
+
+    modalOpenButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+            const modal = document.getElementById(button.dataset.modalTarget);
+            if (modal) openModal(modal);
+        });
+    });
+
+    modalCloseButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+            const modal = button.closest('.modal-overlay');
+            if (modal) closeModal(modal);
+        });
+    });
+
+    document.querySelectorAll('.modal-overlay').forEach((modal) => {
+        modal.addEventListener('click', (event) => {
+            if (event.target === modal) closeModal(modal);
+        });
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+            document.querySelectorAll('.modal-overlay.is-open').forEach((modal) => closeModal(modal));
         }
-
-        function openModal(modal) {
-            modal.classList.add('is-open');
-            modal.setAttribute('aria-hidden', 'false');
-            document.body.style.overflow = 'hidden';
-        }
-
-        modalOpenButtons.forEach((button) => {
-            button.addEventListener('click', () => {
-                const modal = document.getElementById(button.dataset.modalTarget);
-                if (modal) {
-                    openModal(modal);
-                }
-            });
-        });
-
-        modalCloseButtons.forEach((button) => {
-            button.addEventListener('click', () => {
-                const modal = button.closest('.modal-overlay');
-                if (modal) {
-                    closeModal(modal);
-                }
-            });
-        });
-
-        document.querySelectorAll('.modal-overlay').forEach((modal) => {
-            modal.addEventListener('click', (event) => {
-                if (event.target === modal) {
-                    closeModal(modal);
-                }
-            });
-        });
-
-        document.addEventListener('keydown', (event) => {
-            if (event.key === 'Escape') {
-                document.querySelectorAll('.modal-overlay.is-open').forEach((modal) => closeModal(modal));
-            }
-        });
-    </script>
-
-</body>
-</html>
+    });
+</script>
+{% endblock %}

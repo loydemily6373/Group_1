@@ -1,229 +1,225 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Review Moderation - Admin Panel</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            background-color: #f4f6f8;
-            color: #1f2937;
-        }
+{% extends "base.html" %}
 
-        header {
-            background-color: #2c3e50;
-            color: white;
-            padding: 15px 30px;
-        }
+{% block title %}Review Moderation - ThreadSwitch Admin{% endblock %}
 
-        nav {
-            background-color: #34495e;
-            padding: 10px 30px;
-        }
+{% block extra_css %}
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        background-color: #f4f6f8;
+        color: #1f2937;
+    }
 
-        nav a {
-            color: white;
-            text-decoration: none;
-            margin-right: 20px;
-            font-weight: bold;
-        }
+    header {
+        background-color: #2c3e50;
+        color: white;
+        padding: 15px 30px;
+    }
 
-        nav a:hover {
-            text-decoration: underline;
-        }
+    nav {
+        background-color: #34495e;
+        padding: 10px 30px;
+    }
 
-        .container {
-            max-width: 1000px;
-            margin: 30px auto;
-            padding: 30px;
-        }
+    nav a {
+        color: white;
+        text-decoration: none;
+        margin-right: 20px;
+        font-weight: bold;
+    }
 
-        h1 {
-            color: #2c3e50;
-            margin-bottom: 10px;
-        }
+    nav a:hover {
+        text-decoration: underline;
+    }
 
-        .pending-badge {
-            background-color: #e74c3c;
-            color: white;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: bold;
-        }
+    .container {
+        max-width: 1000px;
+        margin: 30px auto;
+        padding: 30px;
+    }
 
-        .section-title {
-            font-size: 18px;
-            font-weight: bold;
-            color: #2c3e50;
-            margin-top: 30px;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #3498db;
-        }
+    
 
-        .review-card {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-            border-left: 4px solid #3498db;
-        }
+    .pending-badge {
+        background-color: #e74c3c;
+        color: white;
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: bold;
+    }
 
-        .review-card.pending {
-            border-left-color: #e74c3c;
-            background-color: #fef8f8;
-        }
+    .section-title {
+        font-size: 18px;
+        font-weight: bold;
+        margin-top: 30px;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #3498db;
+    }
 
-        .review-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 15px;
-        }
+    .review-card {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+        border-left: 4px solid #3498db;
+    }
 
-        .reviewer-info {
-            flex: 1;
-        }
+    .review-card.pending {
+        border-left-color: #e74c3c;
+        background-color: #fef8f8;
+    }
 
-        .reviewer-name {
-            font-weight: bold;
-            color: #2c3e50;
-            margin-bottom: 5px;
-        }
+    .review-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 15px;
+    }
 
-        .review-meta {
-            font-size: 12px;
-            color: #666;
-            margin: 3px 0;
-        }
+    .reviewer-info {
+        flex: 1;
+    }
 
-        .review-rating {
-            color: #f39c12;
-            font-size: 14px;
-            margin-bottom: 5px;
-        }
+    .reviewer-name {
+        font-weight: bold;
+        color: #2c3e50;
+        margin-bottom: 5px;
+    }
 
-        .status-badge {
-            padding: 5px 10px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: bold;
-        }
+    .review-meta {
+        font-size: 12px;
+        color: #666;
+        margin: 3px 0;
+    }
 
-        .status-pending {
-            background-color: #e74c3c;
-            color: white;
-        }
+    .review-rating {
+        color: #f39c12;
+        font-size: 14px;
+        margin-bottom: 5px;
+    }
 
-        .status-approved {
-            background-color: #27ae60;
-            color: white;
-        }
+    .status-badge {
+        padding: 5px 10px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: bold;
+    }
 
-        .status-rejected {
-            background-color: #95a5a6;
-            color: white;
-        }
+    .status-pending {
+        background-color: #e74c3c;
+        color: white;
+    }
 
-        .review-title {
-            font-weight: bold;
-            color: #2c3e50;
-            font-size: 16px;
-            margin-bottom: 10px;
-        }
+    .status-approved {
+        background-color: #27ae60;
+        color: white;
+    }
 
-        .review-comment {
-            color: #555;
-            line-height: 1.6;
-            margin-bottom: 15px;
-            padding: 10px;
-            background-color: #f9f9f9;
-            border-radius: 4px;
-        }
+    .status-rejected {
+        background-color: #95a5a6;
+        color: white;
+    }
 
-        .actions {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
+    .review-title {
+        font-weight: bold;
+        color: #2c3e50;
+        font-size: 16px;
+        margin-bottom: 10px;
+    }
 
-        .btn {
-            padding: 8px 12px;
-            border: none;
-            border-radius: 4px;
-            font-weight: bold;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
-            font-size: 12px;
-        }
+    .review-comment {
+        color: #555;
+        line-height: 1.6;
+        margin-bottom: 15px;
+        padding: 10px;
+        background-color: #f9f9f9;
+        border-radius: 4px;
+    }
 
-        .btn-approve {
-            background-color: #27ae60;
-            color: white;
-        }
+    .actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
 
-        .btn-approve:hover {
-            background-color: #229954;
-        }
+    .btn {
+        padding: 8px 12px;
+        border: none;
+        border-radius: 4px;
+        font-weight: bold;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 12px;
+    }
 
-        .btn-reject {
-            background-color: #f39c12;
-            color: white;
-        }
+    .btn-approve {
+        background-color: #27ae60;
+        color: white;
+    }
 
-        .btn-reject:hover {
-            background-color: #d68910;
-        }
+    .btn-approve:hover {
+        background-color: #229954;
+    }
 
-        .btn-delete {
-            background-color: #e74c3c;
-            color: white;
-        }
+    .btn-reject {
+        background-color: #f39c12;
+        color: white;
+    }
 
-        .btn-delete:hover {
-            background-color: #c0392b;
-        }
+    .btn-reject:hover {
+        background-color: #d68910;
+    }
 
-        .no-reviews {
-            background: white;
-            padding: 30px;
-            border-radius: 8px;
-            text-align: center;
-            color: #666;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
+    .btn-delete {
+        background-color: #e74c3c;
+        color: white;
+    }
 
-        footer {
-            background-color: #2c3e50;
-            color: white;
-            text-align: center;
-            padding: 15px;
-            margin-top: 40px;
-        }
-    </style>
-</head>
+    .btn-delete:hover {
+        background-color: #c0392b;
+    }
 
-<body>
+    .no-reviews {
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        text-align: center;
+        color: #666;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
 
+    footer {
+        background-color: #2c3e50;
+        color: white;
+        text-align: center;
+        padding: 15px;
+        margin-top: 40px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
     <header>
         <h1>Review Moderation</h1>
     </header>
 
     <nav>
-        <a href="{% url 'admin_home' %}">Admin Home</a>
+        <a href="{% url 'admin_home' %}">Home</a>
         <a href="{% url 'product_requests' %}">Product Requests</a>
-        <a href="{% url 'seller_requests' %}">Seller Requests</a>
-        <a href="{% url 'review_moderation' %}">Reviews</a>
+        <a href="{% url 'seller_requests' %}">Seller Account Requests</a>
+        <a href="{% url 'review_moderation' %}">Review Moderation</a>
         <a href="{% url 'account_logout' %}">Logout</a>
     </nav>
 
     <div class="container">
         {% if pending_count > 0 %}
             <h2>Pending Reviews <span class="pending-badge">{{ pending_count }}</span></h2>
-            
+
             {% if pending_reviews %}
                 {% for review in pending_reviews %}
                     <div class="review-card pending">
@@ -254,7 +250,7 @@
                 {% endfor %}
             {% else %}
                 <div class="no-reviews">
-                    <p>✓ No pending reviews. All reviews have been moderated.</p>
+                    <p>No pending reviews. All reviews have been moderated.</p>
                 </div>
             {% endif %}
         {% endif %}
@@ -295,6 +291,4 @@
     <footer>
         © 2026 ThreadSwitch
     </footer>
-
-</body>
-</html>
+{% endblock %}

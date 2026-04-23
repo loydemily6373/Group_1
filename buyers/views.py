@@ -232,23 +232,29 @@ def buyer_homepage(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
     
-    # Add review statistics to each product
+    # Add review statistics to each product.
+    # Reviews may have been written against an older version of a product that was later
+    # soft-deleted and replaced by this one (redirect_to chain), so include those too.
     products_with_reviews = []
     for product in page_obj.object_list:
+        previous_ids = list(
+            Product.objects.filter(redirect_to=product).values_list('id', flat=True)
+        )
+        all_ids = [product.id] + previous_ids
+
         review_stats = Review.objects.filter(
-            product=product,
+            product_id__in=all_ids,
             status='approved'
         ).aggregate(
             avg_rating=Avg('rating'),
             review_count=Count('id')
         )
-        
-        # Get top 3 reviews for display
+
         reviews = Review.objects.filter(
-            product=product,
+            product_id__in=all_ids,
             status='approved'
         ).select_related('buyer').order_by('-created_at')[:3]
-        
+
         product_data = {
             'product': product,
             'avg_rating': review_stats['avg_rating'],
