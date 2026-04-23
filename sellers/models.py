@@ -1,5 +1,4 @@
 import uuid
-import secrets
 
 from django.db import models
 from django.utils import timezone
@@ -108,27 +107,13 @@ class ReturnRequest(models.Model):
 class WebhookURL(models.Model):
     # Sellers can subscribe to order notifications via webhooks.
     seller = models.OneToOneField('accounts.User', on_delete=models.CASCADE, related_name='webhook_url')
-    webhook_url = models.URLField(max_length=500, unique=True)
-    is_active = models.BooleanField(default=True)
+    webhook_url = models.URLField(max_length=500, blank=True, default='')
+    is_active = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"Webhook for {self.seller.username} - {'Active' if self.is_active else 'Inactive'}"
-
-    @classmethod
-    def generate_unique_webhook_url(cls, seller):
-        """Generate a unique webhook URL for a seller."""
-        from django.urls import reverse
-        from django.conf import settings
-        
-        # Generate a unique token for the webhook
-        token = secrets.token_urlsafe(32)
-        # Construct the webhook URL
-        webhook_path = reverse('receive_order_webhook')
-        base_url = getattr(settings, 'WEBHOOK_BASE_URL', 'http://localhost:8000')
-        webhook_url = f"{base_url}{webhook_path}?seller_id={seller.id}&token={token}"
-        return webhook_url
 
 
 class Notification(models.Model):

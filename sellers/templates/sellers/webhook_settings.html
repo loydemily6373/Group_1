@@ -87,12 +87,16 @@
         padding: 12px;
         border: 1px solid #d1d5db;
         border-radius: 6px;
-        background-color: #f3f4f6;
-        color: #4b5563;
-        font-family: 'Courier New', monospace;
-        font-size: 0.85rem;
+        background-color: #fff;
+        color: #1f2937;
+        font-size: 0.95rem;
         box-sizing: border-box;
-        word-break: break-all;
+    }
+
+    .webhook-url-input:focus {
+        outline: none;
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
     }
 
     .info-box {
@@ -109,7 +113,7 @@
         margin-bottom: 8px;
     }
 
-    .info-box ul {
+    .info-box ul, .info-box ol {
         margin: 8px 0;
         padding-left: 20px;
     }
@@ -164,6 +168,13 @@
         padding: 15px;
         margin-top: 40px;
     }
+
+    .dark-mode .webhook-card { background: #1e293b; color: #e2e8f0; }
+    .dark-mode .webhook-card h2 { color: #e2e8f0; }
+    .dark-mode .webhook-url-section label { color: #e2e8f0; }
+    .dark-mode .webhook-url-input { background: #0f172a; color: #e2e8f0; border-color: #334155; }
+    .dark-mode .info-box { background: #1e3a5f; border-color: #1d4ed8; color: #93c5fd; }
+    .dark-mode pre { background: #0f172a !important; color: #e2e8f0; }
 </style>
 {% endblock %}
 
@@ -196,39 +207,38 @@
             <h2>Order Notification Webhook</h2>
 
             <div class="webhook-status {% if webhook.is_active %}active{% else %}inactive{% endif %}">
-                Status: {% if webhook.is_active %}Active{% else %}Inactive{% endif %}
-            </div>
-
-            <div class="webhook-url-section">
-                <label for="webhook-url">Your Webhook URL:</label>
-                <input type="text" id="webhook-url" class="webhook-url-input" value="{{ webhook.webhook_url }}" readonly>
-                <small style="color: #6b7280; display: block; margin-top: 8px;">Copy this URL and configure it in your external system to receive order notifications.</small>
+                Status: {% if webhook.is_active %}Active — notifications are being sent{% else %}Inactive — notifications are off{% endif %}
             </div>
 
             <div class="info-box">
-                <h3>What You'll Receive</h3>
-                <p>When a customer places an order for your products, we'll send a POST request to your webhook URL with the following information:</p>
-                <ul>
-                    <li><strong>Product Name:</strong> Name of the ordered product</li>
-                    <li><strong>Quantity & Price:</strong> Item quantity and unit price</li>
-                    <li><strong>Shipping Address:</strong> Complete delivery address</li>
-                    <li><strong>Order Date & Time:</strong> When the order was placed</li>
-                </ul>
-            </div>
-
-            <div class="info-box" style="background: #fef3c7; border-color: #fcd34d; color: #92400e;">
-                <h3>Configuration Instructions</h3>
-                <ol style="margin: 8px 0; padding-left: 20px;">
-                    <li>Copy your webhook URL above</li>
-                    <li>Go to your system/service that you want to integrate with</li>
-                    <li>Add a webhook endpoint that points to your system</li>
-                    <li>Our system will send POST requests to this URL whenever someone orders your products</li>
-                    <li>Toggle the switch below to activate/deactivate notifications</li>
+                <h3>How to set up</h3>
+                <ol>
+                    <li>Create a webhook endpoint in your external system (e.g. Zapier, Make, your own server)</li>
+                    <li>Paste that URL below and click <strong>Save URL</strong></li>
+                    <li>Click <strong>Activate Webhook</strong> to start receiving order notifications</li>
                 </ol>
             </div>
 
-            <form method="post" action="{% url 'toggle_webhook' %}">
+            <form method="post">
                 {% csrf_token %}
+                <input type="hidden" name="action" value="save_url">
+                <div class="webhook-url-section">
+                    <label for="webhook-url">Your Webhook URL:</label>
+                    <input type="url" id="webhook-url" name="webhook_url" class="webhook-url-input"
+                           value="{{ webhook.webhook_url }}" placeholder="https://your-service.com/webhook-endpoint">
+                    <small style="color: #6b7280; display: block; margin-top: 8px;">
+                        Paste the URL of your webhook endpoint. We will send a POST request here whenever a customer orders your products.
+                    </small>
+                </div>
+                <div class="button-group" style="margin-bottom: 20px;">
+                    <button type="submit" class="btn btn-primary">Save URL</button>
+                </div>
+            </form>
+
+            {% if webhook.webhook_url %}
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="toggle">
                 <div class="button-group">
                     {% if webhook.is_active %}
                         <button type="submit" class="btn btn-danger">Deactivate Webhook</button>
@@ -238,11 +248,16 @@
                     <a href="{% url 'seller_home' %}" class="btn btn-secondary">Back to Dashboard</a>
                 </div>
             </form>
+            {% else %}
+            <div class="button-group">
+                <a href="{% url 'seller_home' %}" class="btn btn-secondary">Back to Dashboard</a>
+            </div>
+            {% endif %}
         </div>
 
         <div class="webhook-card">
             <h2>Sample Payload</h2>
-            <p>Here's an example of what you'll receive in the webhook POST request:</p>
+            <p>Here's an example of what your endpoint will receive as a POST request body (JSON):</p>
             <pre style="background: #f3f4f6; padding: 12px; border-radius: 6px; overflow-x: auto; font-size: 0.85rem;"><code>{
   "event": "order_placed",
   "order_number": "ORD-20260419120000-ABC123",

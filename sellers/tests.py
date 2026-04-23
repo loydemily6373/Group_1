@@ -1307,7 +1307,7 @@ class ProductSeedDataTests(TestCase):
 class WebhookTests(TestCase):
     def setUp(self):
         from .models import WebhookURL
-        
+
         self.seller = User.objects.create_user(
             username='webhook-seller',
             password='StrongPass123!',
@@ -1323,6 +1323,12 @@ class WebhookTests(TestCase):
             last_name='Buyer',
             email='webhook-buyer@example.com',
             role='buyer',
+        )
+        # Webhooks are no longer auto-created — create one manually for tests that need it
+        self.webhook = WebhookURL.objects.create(
+            seller=self.seller,
+            webhook_url='https://example.com/seller-webhook',
+            is_active=True,
         )
         self.product = Product.objects.create(
             seller_id=self.seller,
@@ -1371,10 +1377,9 @@ class WebhookTests(TestCase):
             is_default=True,
         )
 
-    def test_webhook_url_created_for_new_seller(self):
+    def test_webhook_not_auto_created_for_new_seller(self):
         from .models import WebhookURL
-        
-        # Create a new seller
+
         new_seller = User.objects.create_user(
             username='new-webhook-seller',
             password='StrongPass123!',
@@ -1383,12 +1388,10 @@ class WebhookTests(TestCase):
             email='new-webhook-seller@example.com',
             role='seller',
         )
-        
-        # Check that webhook was created
+
+        # Webhooks are no longer auto-created on account registration
         webhook = WebhookURL.objects.filter(seller=new_seller).first()
-        self.assertIsNotNone(webhook)
-        self.assertTrue(webhook.is_active)
-        self.assertIn('seller_id=' + str(new_seller.id), webhook.webhook_url)
+        self.assertIsNone(webhook)
 
     def test_webhook_url_is_unique(self):
         from .models import WebhookURL
@@ -1401,9 +1404,7 @@ class WebhookTests(TestCase):
             self.assertNotEqual(webhook1.webhook_url, webhook2.webhook_url)
 
     def test_seller_can_toggle_webhook(self):
-        from .models import WebhookURL
-        
-        webhook = WebhookURL.objects.filter(seller=self.seller).first()
+        webhook = self.webhook
         self.assertTrue(webhook.is_active)
         
         # Toggle to inactive
@@ -1431,20 +1432,15 @@ class WebhookTests(TestCase):
         # Should be redirected or forbidden
         self.assertNotEqual(response.status_code, 200)
 
-    def test_webhook_settings_page_shows_webhook_url_for_seller(self):
-        from .models import WebhookURL
-        
+    def test_webhook_settings_page_shows_url_input_for_seller(self):
         client = Client()
         client.force_login(self.seller)
         response = client.get(reverse('webhook_settings'))
-        
+
         self.assertEqual(response.status_code, 200)
-        webhook = WebhookURL.objects.filter(seller=self.seller).first()
-        # Check for the webhook URL path without the token (since token is unique)
-        self.assertContains(response, '/webhook/order/')
-        # Verify webhook exists and is displayed
-        self.assertIsNotNone(webhook)
-        self.assertTrue(webhook.is_active)
+        # Page should show the URL input and the saved webhook URL
+        self.assertContains(response, 'webhook_url')
+        self.assertContains(response, 'https://example.com/seller-webhook')
 
     def test_webhook_payload_contains_required_fields(self):
         """Test that webhook payload includes all required information."""
@@ -1473,9 +1469,7 @@ class WebhookTests(TestCase):
             line_total='29.99',
         )
         
-        # Mock both requests.post and send_slack_notification to avoid multiple calls
-        with patch('sellers.webhooks.requests.post') as mock_post, \
-             patch('sellers.webhooks.send_slack_notification'):
+        with patch('sellers.webhooks.requests.post') as mock_post:
             mock_post.return_value = MagicMock(status_code=200)
             send_order_webhook(order_item)
             
@@ -1508,14 +1502,12 @@ class WebhookTests(TestCase):
 
     def test_webhook_not_sent_if_inactive(self):
         """Test that webhook is not sent if it's marked as inactive."""
-        from .models import WebhookURL
         from .webhooks import send_order_webhook
         from unittest.mock import patch
-        
+
         # Deactivate webhook
-        webhook = WebhookURL.objects.filter(seller=self.seller).first()
-        webhook.is_active = False
-        webhook.save()
+        self.webhook.is_active = False
+        self.webhook.save()
         
         # Create an order and order item
         order = Order.objects.create(
@@ -1539,9 +1531,7 @@ class WebhookTests(TestCase):
             line_total='29.99',
         )
         
-        # Mock the requests.post to ensure it's not called for webhook, and mock Slack too
-        with patch('sellers.webhooks.requests.post') as mock_post, \
-             patch('sellers.webhooks.send_slack_notification'):
+        with patch('sellers.webhooks.requests.post') as mock_post:
             result = send_order_webhook(order_item)
             
             # Verify that post was NOT called (webhook should not be sent if inactive)
