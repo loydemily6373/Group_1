@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Manage Discounts - ThreadSwitch</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background-color: #f4f6f8;
+            color: #1f2937;
+        }
+
+        header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 15px 30px;
+        }
+
+        nav {
+            background-color: #34495e;
+            padding: 10px 30px;
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            margin-right: 20px;
+            font-weight: bold;
+        }
+
+        nav a:hover {
+            text-decoration: underline;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 30px auto;
+            padding: 30px;
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+
+        .no-products {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            text-align: center;
+            color: #666;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .products-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .products-table thead {
+            background-color: #2c3e50;
+            color: white;
+        }
+
+        .products-table th {
+            padding: 15px;
+            text-align: left;
+            font-weight: bold;
+        }
+
+        .products-table td {
+            padding: 15px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .products-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .status-badge {
+            display: inline-block;
+            background-color: #10b981;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: bold;
+        }
+
+        .status-badge.none {
+            background-color: #d1d5db;
+            color: #6b7280;
+        }
+
+        .price-original {
+            text-decoration: line-through;
+            color: #9ca3af;
+            margin-right: 6px;
+        }
+
+        .price-discounted {
+            color: #16a34a;
+            font-weight: bold;
+        }
+
+        .discount-badge {
+            display: inline-block;
+            background: #dc2626;
+            color: white;
+            font-size: 0.75rem;
+            font-weight: bold;
+            padding: 2px 7px;
+            border-radius: 4px;
+            margin-left: 6px;
+            vertical-align: middle;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 0.9rem;
+        }
+
+        .btn-primary {
+            background-color: #3498db;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #2980b9;
+        }
+
+        .btn-danger {
+            background-color: #ef4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #dc2626;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h2>ThreadSwitch Seller Dashboard</h2>
+    </header>
+
+    <nav>
+        <a href="{% url 'seller_home' %}">Home</a>
+        <a href="{% url 'product_list' %}">My Listings</a>
+        <a href="{% url 'seller_order_history' %}">Orders</a>
+        <a href="{% url 'seller_reviews' %}">Reviews</a>
+        <a href="{% url 'manage_product_discounts' %}">Manage Discounts</a>
+        <a href="{% url 'seller_home' %}">Logout</a>
+    </nav>
+
+    <div class="container">
+        <h1>Manage Product Discounts</h1>
+
+        {% if products %}
+            <table class="products-table">
+                <thead>
+                    <tr>
+                        <th>Product Name</th>
+                        <th>Price</th>
+                        <th>Discount Status</th>
+                        <th>Discount Amount</th>
+                        <th>Active Period</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in products %}
+                        <tr>
+                            <td>{{ product.product_name }}</td>
+                            <td>
+                                {% if product.is_discount_active %}
+                                    <span class="price-original">${{ product.price }}</span>
+                                    <span class="price-discounted">${{ product.get_discounted_price }}</span>
+                                    <span class="discount-badge">{{ product.discount_percent|floatformat:0 }}% OFF</span>
+                                {% else %}
+                                    ${{ product.price }}
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if product.is_discount_active %}
+                                    <span class="status-badge">Active</span>
+                                {% elif product.discount_percent %}
+                                    <span class="status-badge" style="background-color: #f59e0b; color: white;">Scheduled</span>
+                                {% else %}
+                                    <span class="status-badge none">No Discount</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if product.discount_percent %}
+                                    {{ product.discount_percent|floatformat:0 }}% off
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if product.discount_start_date and product.discount_end_date %}
+                                    {{ product.discount_start_date|date:"M d, Y H:i" }}<br>
+                                    to<br>
+                                    {{ product.discount_end_date|date:"M d, Y H:i" }}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    <a href="{% url 'apply_discount' product.id %}" class="btn btn-primary">
+                                        {% if product.discount_percent %}Edit{% else %}Add{% endif %}
+                                    </a>
+                                    {% if product.discount_percent %}
+                                        <a href="{% url 'remove_discount' product.id %}" class="btn btn-danger">Remove</a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <div class="no-products">
+                <p>You don't have any products yet. <a href="{% url 'product_creation' %}">Create one now!</a></p>
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>

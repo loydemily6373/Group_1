@@ -110,6 +110,7 @@ class OrderItem(models.Model):
 	product_name = models.CharField(max_length=200)
 	item_status = models.CharField(max_length=20, choices=ITEM_STATUS_CHOICES, default='placed')
 	unit_price = models.DecimalField(max_digits=10, decimal_places=2)
+	discount_percent_applied = models.FloatField(null=True, blank=True)
 	quantity = models.PositiveIntegerField()
 	line_total = models.DecimalField(max_digits=10, decimal_places=2)
 

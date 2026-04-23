@@ -1,4 +1,5 @@
 import tempfile
+from datetime import timedelta
 
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase
@@ -1056,6 +1057,121 @@ class ProductWorkflowTests(TestCase):
         })
 
         self.assertEqual(response.status_code, 403)
+
+
+class DiscountTests(TestCase):
+    def setUp(self):
+        self.seller = User.objects.create_user(
+            username='discount_seller',
+            password='StrongPass123!',
+            first_name='Discount',
+            last_name='Seller',
+            email='discount_seller@example.com',
+            role='seller',
+        )
+        self.client.force_login(self.seller)
+        self.product = Product.objects.create(
+            seller_id=self.seller,
+            product_name='Discount Hoodie',
+            category='Hoodie',
+            price='100.00',
+            stock=10,
+            description='A hoodie for discount testing',
+            active=True,
+            status='approved',
+            redirect_to=None,
+            deleted_at=None,
+        )
+
+    def test_is_discount_active_true_within_date_range(self):
+        self.product.discount_percent = 20
+        self.product.discount_start_date = timezone.now() - timedelta(hours=1)
+        self.product.discount_end_date = timezone.now() + timedelta(hours=1)
+        self.product.save()
+
+        self.assertTrue(self.product.is_discount_active)
+
+    def test_is_discount_active_false_before_start_date(self):
+        self.product.discount_percent = 20
+        self.product.discount_start_date = timezone.now() + timedelta(days=1)
+        self.product.discount_end_date = timezone.now() + timedelta(days=2)
+        self.product.save()
+
+        self.assertFalse(self.product.is_discount_active)
+
+    def test_is_discount_active_false_after_end_date(self):
+        self.product.discount_percent = 20
+        self.product.discount_start_date = timezone.now() - timedelta(days=2)
+        self.product.discount_end_date = timezone.now() - timedelta(days=1)
+        self.product.save()
+
+        self.assertFalse(self.product.is_discount_active)
+
+    def test_get_discounted_price_applies_reduction_when_active(self):
+        self.product.discount_percent = 25
+        self.product.discount_start_date = timezone.now() - timedelta(hours=1)
+        self.product.discount_end_date = timezone.now() + timedelta(hours=1)
+        self.product.save()
+
+        self.assertEqual(self.product.get_discounted_price(), 75.00)
+
+    def test_get_discounted_price_returns_full_price_when_no_discount_active(self):
+        self.assertFalse(self.product.is_discount_active)
+
+        from decimal import Decimal
+        self.assertEqual(self.product.get_discounted_price(), Decimal('100.00'))
+
+    def test_discount_form_rejects_end_date_before_start_date(self):
+        from .forms import DiscountForm
+        form = DiscountForm(data={
+            'discount_percent': 10,
+            'discount_start_date': '2030-01-02T12:00',
+            'discount_end_date': '2030-01-01T12:00',
+        }, instance=self.product)
+
+        self.assertFalse(form.is_valid())
+        self.assertIn('End date must be after the start date.', form.non_field_errors())
+
+    def test_seller_can_apply_discount_via_view(self):
+        start = timezone.now() - timedelta(hours=1)
+        end = timezone.now() + timedelta(days=7)
+
+        response = self.client.post(reverse('apply_discount', args=[self.product.id]), {
+            'discount_percent': 15,
+            'discount_start_date': start.strftime('%Y-%m-%dT%H:%M'),
+            'discount_end_date': end.strftime('%Y-%m-%dT%H:%M'),
+        })
+
+        self.assertRedirects(response, reverse('manage_product_discounts'))
+        self.product.refresh_from_db()
+        self.assertEqual(self.product.discount_percent, 15)
+        self.assertTrue(self.product.is_discount_active)
+
+    def test_seller_can_remove_discount_via_view(self):
+        self.product.discount_percent = 20
+        self.product.discount_start_date = timezone.now() - timedelta(hours=1)
+        self.product.discount_end_date = timezone.now() + timedelta(hours=1)
+        self.product.save()
+
+        response = self.client.post(reverse('remove_discount', args=[self.product.id]))
+
+        self.assertRedirects(response, reverse('manage_product_discounts'))
+        self.product.refresh_from_db()
+        self.assertIsNone(self.product.discount_percent)
+        self.assertIsNone(self.product.discount_start_date)
+        self.assertIsNone(self.product.discount_end_date)
+
+    def test_product_list_shows_discount_for_active_product(self):
+        self.product.discount_percent = 30
+        self.product.discount_start_date = timezone.now() - timedelta(hours=1)
+        self.product.discount_end_date = timezone.now() + timedelta(hours=1)
+        self.product.save()
+
+        response = self.client.get(reverse('product_list'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '30% OFF')
+        self.assertContains(response, '$70.00')
 
 
 class ProductSeedDataTests(TestCase):

@@ -95,6 +95,42 @@
             background-color: #e74c3c;
         }
 
+        .discount-btn {
+            background-color: #8e44ad;
+        }
+
+        .remove-discount-btn {
+            background-color: #95a5a6;
+        }
+
+        .price-original {
+            text-decoration: line-through;
+            color: #9ca3af;
+            margin-right: 4px;
+        }
+
+        .price-discounted {
+            color: #16a34a;
+            font-weight: bold;
+        }
+
+        .discount-badge {
+            display: inline-block;
+            background: #dc2626;
+            color: white;
+            font-size: 0.75rem;
+            font-weight: bold;
+            padding: 2px 7px;
+            border-radius: 4px;
+            margin-left: 4px;
+            vertical-align: middle;
+        }
+
+        .discount-scheduled {
+            color: #f39c12;
+            font-weight: bold;
+        }
+
         footer {
             background-color: #2c3e50;
             color: white;
@@ -117,6 +153,7 @@
         <a href="{% url 'product_creation' %}">Add Product</a>
         <a href="{% url 'seller_order_history' %}">Order History</a>
         <a href="{% url 'seller_return_requests' %}">Pending Returns</a>
+        <a href="{% url 'manage_product_discounts' %}">Manage Discounts</a>
         <a href="{% url 'seller_shipping_address' %}">Shipping Address</a>
         <a href="{% url 'webhook_settings' %}">Webhook Settings</a>
         <a href="{% url 'account_logout' %}">Logout</a>
@@ -133,6 +170,7 @@
                 <th>Product ID</th>
                 <th>Product Name</th>
                 <th>Price</th>
+                <th>Discount</th>
                 <th>Stock</th>
                 <th>Status</th>
                 <th>Actions</th>
@@ -143,16 +181,36 @@
                 <td>#P{{ product.id }}</td>
                 <td>{{ product.product_name }}</td>
                 <td>${{ product.price }}</td>
+                <td>
+                    {% if product.discount_percent %}
+                        {% if product.is_discount_active %}
+                            <span class="price-original">${{ product.price }}</span>
+                            <span class="price-discounted">${{ product.get_discounted_price }}</span>
+                            <span class="discount-badge">{{ product.discount_percent|floatformat:0 }}% OFF</span>
+                        {% else %}
+                            ${{ product.price }}<br>
+                            <span class="discount-scheduled">{{ product.discount_percent|floatformat:0 }}% (scheduled)</span>
+                        {% endif %}
+                    {% else %}
+                        —
+                    {% endif %}
+                </td>
                 <td>{{ product.stock }}</td>
                 <td>{{ product.status }}</td>
                 <td>
                     <a href="{% url 'product_edit' product.id %}" class="edit-btn">Edit</a>
                     <a href="{% url 'product_delete' product.id %}" class="delete-btn">Delete</a>
+                    {% if product.discount_percent %}
+                        <a href="{% url 'apply_discount' product.id %}?next=product_list" class="edit-btn discount-btn">Edit Discount</a>
+                        <a href="{% url 'remove_discount' product.id %}?next=product_list" class="delete-btn remove-discount-btn">Remove Discount</a>
+                    {% else %}
+                        <a href="{% url 'apply_discount' product.id %}?next=product_list" class="edit-btn discount-btn">Add Discount</a>
+                    {% endif %}
                 </td>
             </tr>
             {% empty %}
             <tr>
-                <td colspan="6">No products yet.</td>
+                <td colspan="7">No products yet.</td>
             </tr>
             {% endfor %}
         </table>

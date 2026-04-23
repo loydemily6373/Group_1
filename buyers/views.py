@@ -30,7 +30,7 @@ def _get_cart_items_with_totals(buyer):
 
     for cart_item in CartItem.objects.select_related('product').filter(buyer=buyer):
         display_product = cart_item.product.display_product
-        item_total = display_product.price * Decimal(cart_item.quantity)
+        item_total = Decimal(str(display_product.get_discounted_price())) * Decimal(cart_item.quantity)
         total_price += item_total
         cart_items.append({
             'product': display_product,
@@ -52,7 +52,7 @@ def _get_checkout_cart_rows(buyer):
         'product__redirect_to__seller_id',
     ).filter(buyer=buyer):
         display_product = cart_item.product.display_product
-        line_total = display_product.price * Decimal(cart_item.quantity)
+        line_total = Decimal(str(display_product.get_discounted_price())) * Decimal(cart_item.quantity)
         cart_rows.append({
             'cart_item': cart_item,
             'product': display_product,
@@ -472,7 +472,8 @@ def checkout_view(request):
                             seller=seller,
                             seller_shipping_address=seller_shipping_address,
                             product_name=product.product_name,
-                            unit_price=product.price,
+                            unit_price=product.get_discounted_price(),
+                            discount_percent_applied=product.discount_percent if product.is_discount_active else None,
                             quantity=row['quantity'],
                             line_total=round(row['item_total'], 2),
                         )
