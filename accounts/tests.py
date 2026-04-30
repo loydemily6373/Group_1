@@ -291,3 +291,57 @@ class AuthenticationFlowTests(TestCase):
 		})
 
 		self.assertEqual(response.status_code, 200)
+
+
+class DarkModeTests(TestCase):
+	def setUp(self):
+		self.client = APIClient()
+		self.buyer = User.objects.create_user(
+			username='dm_buyer',
+			password='StrongPass123!',
+			first_name='Dark',
+			last_name='Buyer',
+			email='dm_buyer@example.com',
+			role='buyer',
+		)
+		self.seller = User.objects.create_user(
+			username='dm_seller',
+			password='StrongPass123!',
+			first_name='Dark',
+			last_name='Seller',
+			email='dm_seller@example.com',
+			role='seller',
+		)
+		self.admin = User.objects.create_superuser(
+			username='dm_admin',
+			password='StrongPass123!',
+			email='dm_admin@example.com',
+		)
+		self.admin.role = 'admin'
+		self.admin.save()
+
+	def test_buyer_page_has_dark_mode_toggle(self):
+		self.client.force_login(self.buyer)
+		response = self.client.get(reverse('buyer_home'))
+		self.assertEqual(response.status_code, status.HTTP_200_OK)
+		self.assertContains(response, 'id="darkModeToggle"')
+		self.assertContains(response, 'localStorage')
+
+	def test_seller_page_has_dark_mode_toggle(self):
+		self.client.force_login(self.seller)
+		response = self.client.get(reverse('seller_home'))
+		self.assertEqual(response.status_code, status.HTTP_200_OK)
+		self.assertContains(response, 'id="darkModeToggle"')
+		self.assertContains(response, 'localStorage')
+
+	def test_admin_page_has_dark_mode_toggle(self):
+		self.client.force_login(self.admin)
+		response = self.client.get(reverse('admin_home'))
+		self.assertEqual(response.status_code, status.HTTP_200_OK)
+		self.assertContains(response, 'id="darkModeToggle"')
+		self.assertContains(response, 'localStorage')
+
+	def test_dark_mode_css_class_present_in_buyer_page(self):
+		self.client.force_login(self.buyer)
+		response = self.client.get(reverse('buyer_home'))
+		self.assertContains(response, '.dark-mode')

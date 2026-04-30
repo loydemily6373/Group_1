@@ -105,6 +105,16 @@ class ReviewTests(TestCase):
             item_status='completed',
         )
         
+        # Create admin
+        self.admin = User.objects.create_user(
+            username='reviewer_admin',
+            password='StrongPass123!',
+            first_name='Admin',
+            last_name='User',
+            email='admin@example.com',
+            role='admin',
+        )
+
         # Log in buyer
         self.client.login(username='reviewer_buyer', password='StrongPass123!')
     
@@ -350,3 +360,79 @@ class ReviewTests(TestCase):
             
             self.assertEqual(review.rating, rating)
             self.assertTrue(review.is_approved)
+
+    def test_admin_rejects_review(self):
+        """Test that an admin can reject a pending review."""
+        review = Review.objects.create(
+            order_item=self.order_item,
+            buyer=self.buyer,
+            product=self.product,
+            rating=4,
+            title='Good Product',
+            comment='I liked it.',
+            status='pending',
+        )
+
+        self.client.force_login(self.admin)
+        response = self.client.post(reverse('reject_review', args=[review.id]))
+
+        review.refresh_from_db()
+        self.assertEqual(review.status, 'rejected')
+        self.assertRedirects(response, reverse('review_moderation'))
+
+    def test_admin_approves_review(self):
+        """Test that an admin can approve a pending review."""
+        review = Review.objects.create(
+            order_item=self.order_item,
+            buyer=self.buyer,
+            product=self.product,
+            rating=5,
+            title='Excellent!',
+            comment='Really loved it.',
+            status='pending',
+        )
+
+        self.client.force_login(self.admin)
+        response = self.client.post(reverse('approve_review', args=[review.id]))
+
+        review.refresh_from_db()
+        self.assertEqual(review.status, 'approved')
+        self.assertRedirects(response, reverse('review_moderation'))
+
+    def test_admin_deletes_review(self):
+        """Test that an admin can delete a review."""
+        review = Review.objects.create(
+            order_item=self.order_item,
+            buyer=self.buyer,
+            product=self.product,
+            rating=2,
+            title='Not great',
+            comment='Disappointed.',
+            status='pending',
+        )
+        review_id = review.id
+
+        self.client.force_login(self.admin)
+        response = self.client.post(reverse('delete_review', args=[review_id]))
+
+        self.assertFalse(Review.objects.filter(id=review_id).exists())
+        self.assertRedirects(response, reverse('review_moderation'))
+
+    def test_seller_can_view_approved_reviews(self):
+        """Test that a seller can see approved reviews for their products."""
+        Review.objects.create(
+            order_item=self.order_item,
+            buyer=self.buyer,
+            product=self.product,
+            rating=5,
+            title='Fantastic!',
+            comment='Really loved this product!',
+            status='approved',
+        )
+
+        self.client.force_login(self.seller)
+        response = self.client.get(reverse('seller_reviews'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Fantastic!')
+        self.assertContains(response, 'Really loved this product!')

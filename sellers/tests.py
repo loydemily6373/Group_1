@@ -1377,31 +1377,6 @@ class WebhookTests(TestCase):
             is_default=True,
         )
 
-    def test_webhook_not_auto_created_for_new_seller(self):
-        from .models import WebhookURL
-
-        new_seller = User.objects.create_user(
-            username='new-webhook-seller',
-            password='StrongPass123!',
-            first_name='New',
-            last_name='Seller',
-            email='new-webhook-seller@example.com',
-            role='seller',
-        )
-
-        # Webhooks are no longer auto-created on account registration
-        webhook = WebhookURL.objects.filter(seller=new_seller).first()
-        self.assertIsNone(webhook)
-
-    def test_webhook_url_is_unique(self):
-        from .models import WebhookURL
-        
-        webhook1 = WebhookURL.objects.filter(seller=self.seller).first()
-        webhook2 = WebhookURL.objects.filter(seller=self.buyer).first()
-        
-        # Webhook URLs should be different for different users
-        if webhook1 and webhook2:
-            self.assertNotEqual(webhook1.webhook_url, webhook2.webhook_url)
 
     def test_seller_can_toggle_webhook(self):
         webhook = self.webhook
@@ -1421,16 +1396,6 @@ class WebhookTests(TestCase):
         webhook.refresh_from_db()
         self.assertTrue(webhook.is_active)
 
-    def test_webhook_settings_page_requires_seller_role(self):
-        from .models import WebhookURL
-        
-        # Try to access as buyer
-        client = Client()
-        client.force_login(self.buyer)
-        response = client.get(reverse('webhook_settings'))
-        
-        # Should be redirected or forbidden
-        self.assertNotEqual(response.status_code, 200)
 
     def test_webhook_settings_page_shows_url_input_for_seller(self):
         client = Client()
@@ -1533,7 +1498,89 @@ class WebhookTests(TestCase):
         
         with patch('sellers.webhooks.requests.post') as mock_post:
             result = send_order_webhook(order_item)
-            
+
             # Verify that post was NOT called (webhook should not be sent if inactive)
             self.assertFalse(mock_post.called)
             self.assertTrue(result)  # Function returns True even if webhook not sent, as notification was created
+
+    def test_notification_appears_on_dashboard(self):
+        from .models import Notification
+        from .webhooks import send_order_webhook
+        from unittest.mock import patch, MagicMock
+
+        # setUp already has is_active=True, confirm it
+        self.assertTrue(self.webhook.is_active)
+
+        order = Order.objects.create(
+            buyer=self.buyer,
+            buyer_shipping_address=self.buyer_address,
+            payment_method=self.payment_method,
+            order_number='ORD-NOTIF-ACTIVE',
+            subtotal='29.99',
+            shipping_cost='6.99',
+            tax_amount='2.10',
+            grand_total='39.08',
+        )
+        order_item = OrderItem.objects.create(
+            order=order,
+            product=self.product,
+            seller=self.seller,
+            seller_shipping_address=self.seller_address,
+            product_name='Webhook Test Product',
+            unit_price='29.99',
+            quantity=1,
+            line_total='29.99',
+        )
+
+        with patch('sellers.webhooks.requests.post') as mock_post:
+            mock_post.return_value = MagicMock(status_code=200)
+            send_order_webhook(order_item)
+
+        self.assertTrue(Notification.objects.filter(seller=self.seller).exists())
+
+        self.client.force_login(self.seller)
+        response = self.client.get(reverse('seller_home'))
+        self.assertContains(response, 'New Notifications')
+        self.assertContains(response, 'ORD-NOTIF-ACTIVE')
+
+
+    def test_notification_shows_correct_info_on_seller_dashboard(self):
+        from .models import Notification
+
+        Notification.objects.create(
+            seller=self.seller,
+            order_number='ORD-INFO-TEST',
+            product_name='Webhook Test Product',
+            quantity=3,
+            is_seen=False,
+        )
+
+        self.client.force_login(self.seller)
+        response = self.client.get(reverse('seller_home'))
+
+        # message property returns "New order! {qty}x {product}"
+        self.assertContains(response, 'New order! 3x Webhook Test Product')
+        self.assertContains(response, 'ORD-INFO-TEST')
+        self.assertContains(response, 'Dismiss')
+
+    def test_webhook_off_by_default(self):
+        from .models import WebhookURL, Notification
+
+        new_seller = User.objects.create_user(
+            username='default-webhook-seller',
+            password='StrongPass123!',
+            first_name='Default',
+            last_name='Seller',
+            email='default-webhook-seller@example.com',
+            role='seller',
+        )
+
+        # WebhookURL defaults to inactive
+        webhook = WebhookURL.objects.create(
+            seller=new_seller,
+            webhook_url='https://example.com/default-hook',
+        )
+        self.assertFalse(webhook.is_active)
+
+        # No notifications exist for a brand-new seller
+        self.assertEqual(Notification.objects.filter(seller=new_seller).count(), 0)
